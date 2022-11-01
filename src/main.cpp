@@ -12,6 +12,7 @@
 #include <iterator>
 #include "support/cosmos-defs.h"
 #include "support/packetcomm.h"
+#include "astrodev.h"
 // #include "math/bytelib.h"
 // #include "math/crclib.h"
 
@@ -35,9 +36,7 @@ void push_recv(std::vector<uint8_t> packet);
 std::vector<uint8_t> pop_send();
 void push_send(std::vector<uint8_t> packet);
 
-int rnum = 0;
-int snum = 0;
-std::map<int, int> ii;
+Cosmos::Devices::Radios::Astrodev astrodev;
 // Recv thread loop
 void recv_loop();
 
@@ -45,23 +44,74 @@ void setup()
 {
   // initialize LED digital pin as an output.
   pinMode(LED_BUILTIN, OUTPUT);
+  // Each thread tick length
+  threads.setSliceMicros(10);
+  // Wait for serial monitor
+  Serial.println("Delay 5 sec");
+  delay(5000);
 
   // Setup serial stuff
   Serial.begin(115200);
+  int32_t iretn = astrodev.Init(&Serial8, 9600);
+  if (iretn < 0)
+  {
+    Serial.println("Error initializing Astrodev radio. Exiting...");
+    exit(-1);
+  }
+
+  astrodev.tcv_config.interface_baud_rate = 0;
+  astrodev.tcv_config.power_amp_level = 220;
+  astrodev.tcv_config.rx_baud_rate = 1;
+  astrodev.tcv_config.tx_baud_rate = 1;
+  astrodev.tcv_config.ax25_preamble_length = 20;
+  astrodev.tcv_config.ax25_postamble_length = 20;
+  // astrodev.tcv_config.config1;
+  // astrodev.tcv_config.config2;
+  astrodev.tcv_config.rx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+  astrodev.tcv_config.tx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+  astrodev.tcv_config.tx_freq_high = 450000 / 65536;
+  astrodev.tcv_config.tx_freq_low = 450000 % 65536;
+  astrodev.tcv_config.rx_freq_high = 450000 / 65536;
+  astrodev.tcv_config.rx_freq_low = 450000 % 65536;
+  memcpy(astrodev.tcv_config.ax25_source, "SOURCE", 6);
+  memcpy(astrodev.tcv_config.ax25_destination, "DESTIN", 6);
+
+  while ((iretn = astrodev.SetTCVConfig()) < 0)
+  {
+    Serial.println("Resetting");
+    astrodev.Reset();
+    Serial.println("Failed to settcvconfig astrodev");
+    threads.delay(5000);
+  }
+  Serial.println("SetTCVConfig successful");
+  while ((iretn = astrodev.GetTCVConfig()) < 0)
+  {
+    Serial.println("Failed to gettcvconfig astrodev");
+    threads.delay(5000);
+  }
+  Serial.println("GetTCVConfig successful");
+  Serial.println("Exiting...");
+  exit(-1);
+
+  /*
   SLIPHWSerial.begin(115200);
-  SLIPHWSerial.flush();
+  Serial.clear();
+  HWSERIAL.clear();
 
   // Start recv loop
-  threads.addThread(recv_loop);
-  threads.setSliceMicros(10);
+  //threads.addThread(recv_loop);
+  */
 }
 
 PacketComm packet;
 int32_t iretnSend = 0;
+
+int32_t sentNum = 0;
 // TXS Loop
-// Empties array 
+// Empties array
 void loop()
 {
+  /*
   // turn the LED on (HIGH is the voltage level)
   digitalWrite(LED_BUILTIN, HIGH);
   //Serial.println("sending!");
@@ -86,8 +136,37 @@ void loop()
   // turn the LED off by making the voltage LOW
   digitalWrite(LED_BUILTIN, LOW);
   //Serial.println("send sleeping...");
+  */
+
+  // Ping code
+  // Serial.print(sentNum++);
+  // Serial.print(" | Pinging...");
+  // int32_t iretn = astrodev.Ping();
+  // Serial.print(" iretn: ");
+  // Serial.println(iretn);
+
+  // Testing message transmissions
+
+  Serial.print(sentNum++);
+  Serial.println(" | Transmit message...");
+  Cosmos::Devices::Radios::Astrodev::frame message;
+  message.header.command = (uint8_t)Cosmos::Devices::Radios::Astrodev::Command::TRANSMIT;
+  message.header.sizehi = 0;
+  message.header.sizelo = 25;
+  for (size_t i = 0; i < message.header.sizelo; ++i)
+  {
+    message.payload[i] = i;
+  }
+  int32_t iretn = astrodev.Transmit(message);
+  Serial.print(" iretn: ");
+  Serial.println(iretn);
+
   // wait for 3 seconds
-  threads.delay(1000);
+  threads.delay(10);
+  if (sentNum > 6000)
+  {
+    exit(-1);
+  }
   //threads.idle();
 }
 
