@@ -13,25 +13,25 @@ namespace Cosmos {
             int32_t Astrodev::Init(HardwareSerial* new_serial, uint32_t speed)
             {
                 int32_t iretn = 0;
-                int32_t timeout = 5;
+                int32_t retries = 5;
                 serial = new_serial;
                 serial->begin(speed);
                 serial->clear();
                 serial->flush();
 
                 Serial.println("Resetting radio...");
-                // do
-                // {
-                //     iretn = Reset();
-                //     threads.delay(2000);
-                //     if (timeout-- <= 0)
-                //     {
-                //         Serial.println("Radio reset unsuccessful");
-                //         return iretn;
-                //     }
-                // } while (iretn < 0);
+                do
+                {
+                    iretn = Reset();
+                    threads.delay(2000);
+                    if (--retries < 0)
+                    {
+                        Serial.println("Radio reset unsuccessful");
+                        return iretn;
+                    }
+                } while (iretn < 0);
 
-                // Serial.println("Radio reset successful");
+                Serial.println("Radio reset successful");
                 Serial.println("Radio ping test...");
 
                 if ((iretn=Ping()) < 0)
@@ -83,8 +83,6 @@ namespace Cosmos {
                 if (message.header.sizehi == 0 && message.header.sizelo == 0)
                 {
                     Serial.println();
-                    // Important: don't take this delay out, radio doesn't work without it
-                    //threads.delay(10);
                     return message.header.sizelo;
                 }
 
@@ -107,8 +105,7 @@ namespace Cosmos {
                 }
                 Serial.println();
 
-                // Important: don't take this delay out, radio doesn't work without it
-                // threads.delay(10);
+                // 10 = 8 bytes header + 2 byte crc
                 return message.header.sizelo + 10;
             }
 
@@ -136,6 +133,11 @@ namespace Cosmos {
 
             int32_t Astrodev::Ping()
             {
+                return Ping(true);
+            }
+
+            int32_t Astrodev::Ping(bool await_pong)
+            {
                 int32_t iretn;
                 frame message;
 
@@ -149,6 +151,12 @@ namespace Cosmos {
                 {
                     return iretn;
                 }
+                // Don't try to get the response
+                if (!await_pong)
+                {
+                    return iretn;
+                }
+
                 threads.delay(10);
                 iretn = Receive(message);
                 Serial.print("Receive iretn: ");
@@ -258,16 +266,24 @@ namespace Cosmos {
                 return 0;
             }
 
-            // int32_t Astrodev::GetTelemetry()
-            // {
-            //     int32_t iretn;
-            //     frame message;
+            int32_t Astrodev::GetTelemetry()
+            {
+                int32_t iretn;
+                frame message;
 
-            //     message.header.command = (uint8_t)Command::TELEMETRY;
-            //     message.header.size = 0;
-            //     iretn = Transmit(message);
-            //     return iretn;
-            // }
+                message.header.command = (uint8_t)Command::TELEMETRY;
+                message.header.sizehi = 0;
+                message.header.sizelo = 0;
+                iretn = Transmit(message);
+                Serial.print("Transmit iretn: ");
+                Serial.println(iretn);
+                if (iretn < 0)
+                {
+                    return iretn;
+                }
+
+                return 0;
+            }
 
             int32_t Astrodev::SetRFConfig(rf_config config)
             {
@@ -300,16 +316,11 @@ namespace Cosmos {
                 return (cs);
             }
 
+            // Returns negative on error, 0 on header-only acknowledge responses,
+            // or Astrodev::Command enum type on a message with a payload
             int32_t Astrodev::Receive(frame &message)
             {
                 int16_t ch = -1;
-                
-                union
-                {
-                    uint16_t cs;
-                    uint8_t csb[2];
-                };
-                uint16_t size;
 
                 // Wait for sync characters
                 elapsedMillis wdt;
@@ -348,7 +359,7 @@ namespace Cosmos {
                 }
 
                 // Check header for accuracy
-                cs = CalcCS(&message.preamble[2], 4);
+                uint16_t cs = CalcCS(&message.preamble[2], 4);
                 if (cs != message.header.cs)
                 {
                     return (ASTRODEV_ERROR_HEADER_CS);
@@ -383,12 +394,10 @@ namespace Cosmos {
                 }
 
                 // Read rest of payload bytes
-                csb[0] = message.header.sizelo;
-                csb[1] = message.header.sizehi;
-                size = cs;
+                uint8_t size = message.header.sizelo;
                 size_t sizeToRead = size+2;
                 Serial.print("size: ");
-                Serial.println(cs);
+                Serial.println(size);
                 size_t readLocation = 0;
                 bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
                 Serial.print("bytesRead: ");
@@ -416,33 +425,6 @@ namespace Cosmos {
                     return (ASTRODEV_ERROR_PAYLOAD_CS);
                 }
 
-                // Handle payload
-                switch ((Command)message.header.command)
-                {
-                case Command::GETTCVCONFIG:
-                    Serial.println("in get tcv config");
-                    break;
-                case Command::RECEIVE:
-                    Serial.println("in receive");
-                    // vector<uint8_t> payload;
-                    // payload.insert(payload.begin(), (uint8_t *)message.payload, (uint8_t *)message.payload+message.header.sizelo);
-                    // push_queue_in(payload);
-            //        printf("Payload %u %u %u %u\n", handle.payloads.size(), payload[0], payload[16], payload[payload.size()-5]);
-                    break;
-                case Command::TELEMETRY:
-                    Serial.println("in telem");
-                    //message.telem = message..telemetry;
-            //        printf("Telemetry Ops %hu Temp %hd Time %u RSSI %hu RXbytes %u TXbytes %u\n",
-            //               frame.telemetry.op_counter,
-            //               frame.telemetry.msp430_temp,
-            //               frame.telemetry.time_count,
-            //               frame.telemetry.rssi,
-            //               frame.telemetry.bytes_rx,frame.telemetry.bytes_tx);
-                    break;
-                default:
-                    break;
-                }
-
                 char msg[4];
                 Serial.print("recv msg: ");
                 for (uint16_t i=0; i<message.header.sizelo; i++)
@@ -453,7 +435,7 @@ namespace Cosmos {
                 }
                 Serial.println();
 
-                return (message.header.command);
+                return message.header.command;
             }
 
             // void Astrodev::receive_loop()
@@ -596,14 +578,6 @@ namespace Cosmos {
             //         }
             //     }
             // }
-
-            int32_t Astrodev::push_queue_in(vector<uint8_t> data)
-            {
-                Threads::Scope lock(qmutex_in);
-                queue_in.push(data);
-                return 1;
-            }
-
         }
     }
 }

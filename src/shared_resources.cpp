@@ -54,7 +54,7 @@ int32_t shared_resources::init_radio(HardwareSerial* new_serial, uint32_t speed)
     return 0;
 }
 
-// Return -1 if buffer is empty, 0 on success
+// Return -1 if buffer is empty, size of recv_buffer on success
 int32_t shared_resources::pop_recv(Cosmos::Support::PacketComm &packet)
 {
   Threads::Scope lock(recv_lock);
@@ -65,7 +65,7 @@ int32_t shared_resources::pop_recv(Cosmos::Support::PacketComm &packet)
   }
   packet = recv_buffer.front();
   recv_buffer.pop_front();
-  return 0;
+  return recv_buffer.size();
 }
 
 void shared_resources::push_recv(const Cosmos::Support::PacketComm &packet)
@@ -74,7 +74,7 @@ void shared_resources::push_recv(const Cosmos::Support::PacketComm &packet)
   recv_buffer.push_back(packet);
 }
 
-// Return -1 if buffer is empty, 0 on success
+// Return -1 if buffer is empty, size of send_buffer on success
 int32_t shared_resources::pop_send(Cosmos::Support::PacketComm &packet)
 {
   Threads::Scope lock(send_lock);
@@ -85,7 +85,7 @@ int32_t shared_resources::pop_send(Cosmos::Support::PacketComm &packet)
   //std::vector<uint8_t> packet (std::make_move_iterator(recv_buffer.front().begin()), std::make_move_iterator(recv_buffer.front().end()));
   packet = send_buffer.front();
   send_buffer.pop_front();
-  return 0;
+  return send_buffer.size();
 }
 
 void shared_resources::push_send(const Cosmos::Support::PacketComm &packet)

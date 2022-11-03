@@ -234,31 +234,18 @@ namespace Cosmos {
                 // void Join();
                 // int32_t Packetize(PacketComm& packet);
                 // int32_t UnPacketize(PacketComm& packet);
-
                 int32_t Ping();
+                int32_t Ping(bool await_pong);
                 int32_t Reset();
                 // int32_t SendData(vector<uint8_t> data);
                 int32_t GetTCVConfig();
                 int32_t SetTCVConfig();
-                // int32_t GetTelemetry();
+                int32_t GetTelemetry();
                 int32_t SetRFConfig(rf_config config);
                 int32_t Transmit(frame &message);
                 int32_t Transmit(Cosmos::Support::PacketComm &packet);
                 int32_t Receive(frame &message);
                 uint16_t CalcCS(uint8_t *data, uint16_t size);
-
-
-                // int32_t connect(string dev);
-                // int32_t disconnect();
-                // int32_t recvframe();
-                // int32_t setupframe(frame *frame);
-                // uint16_t loadframe(uint8_t *data, uint16_t size);
-                // int32_t unloadframe(uint8_t *data, uint16_t size);
-                // int32_t checkframe(frame* frame);
-                // int32_t rfconfig();
-                // int32_t firmwarerev();
-                // int32_t transmit(uint8_t *data, uint16_t size);
-                // int32_t receive(uint8_t *data, uint16_t size);
 
             private:
                 HardwareSerial *serial;
@@ -269,13 +256,8 @@ namespace Cosmos {
 
                 queue<vector<uint8_t>> queue_in;
                 Threads::Mutex qmutex_in;
-                int32_t push_queue_in(vector<uint8_t> data);
-                int32_t pop_queue_in(vector<uint8_t> &data);
-                int32_t check_queue_in();
 
                 queue<PacketComm> packet_queue_out;
-                void receive_loop();
-                // thread rthread;
                 Threads::Mutex qmutex_out;
             };
         }

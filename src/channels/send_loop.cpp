@@ -2,56 +2,57 @@
 #include "channels/send_loop.h"
 #include "shared_resources.h"
 
+// Debug values
 int32_t sentNum = 0;
 int32_t errSend = 0;
 
 // Global shared defined in main.cpp
 extern shared_resources shared;
 
-// Reusable packet objects
 namespace
 {
+    int32_t iretn = 0;
+    // Reusable packet objects
     Cosmos::Support::PacketComm packet;
     Cosmos::Devices::Radios::Astrodev::frame response;
 }
 
 // TXS Loop
-// Empties array
 void Cosmos::Radio_interface::send_loop()
 {
-    int32_t iretn = 0;
-
     Serial.println("send_loop started");
 
+    // TXS loop continually attempts to flush its outgoing packet queue
     while(true)
     {
-        // Testing message transmissions
+        // Send packet at front of queue
         iretn = shared.pop_send(packet);
         if (iretn >= 0)
         {
-            Serial.println("sending packet");
             Cosmos::Radio_interface::send_packet();
         } else {
-            Serial.println("send buf empty");
+            // Send queue was empty
             threads.delay(1000);
         }
 
-        // wait for 3 seconds
+        // Yield thread
         threads.delay(10);
-        if (sentNum > 100)
+        // ------- Stuff below here for debugging, remove later
+        if (sentNum > 24)
         {
             Serial.print("Sent: ");
             Serial.println(sentNum);
             Serial.print("Errors: ");
             Serial.println(errSend);
-            exit(-1);
+            Serial.println("Returning from send_loop");
+            return;
         }
         Cosmos::Support::PacketComm p;
         p.data.resize(1,0);
         shared.push_send(p);
+        // ------- Debug end
     }
-    
-    //threads.idle();
+    return;
 }
 
 //! Send out a PacketComm packet with proper radio transmit buffer checks and retries
@@ -60,46 +61,42 @@ void Cosmos::Radio_interface::send_packet()
     uint8_t retries = 0;
     Serial.print(sentNum++);
     Serial.println(" | Transmit message...");
-    int32_t iretn = 0;
-    // Attempt resend on NACK
+    // TODO: Attempt resend on NACK? Would be difficult to coordinate
     while(true)
     {
-        iretn = shared.astrodev.Transmit(packet);
-        Serial.print("Transmit iretn: ");
-        Serial.println(iretn);
-        if (iretn < 0)
+        if (!shared.astrodev.buffer_full)
         {
-            ++errSend;
+            // Attempt transmit if transfer bull is not full
+            iretn = shared.astrodev.Transmit(packet);
+            Serial.print("Transmit iretn: ");
+            Serial.println(iretn);
+            if (iretn < 0)
+            {
+                ++errSend;
+            }
+            // Transmit successful
             break;
         }
-        iretn = shared.astrodev.Receive(response);
-        Serial.print("Recieve iretn: ");
-        Serial.println(iretn);
-        // Wait abit on NACK or if the transmit buffer is full
-        if (iretn == COSMOS_ASTRODEV_ERROR_NACK || shared.astrodev.buffer_full)
+        else
         {
-            Serial.print("iretn: ");
-            Serial.print(iretn);
-            Serial.print(" buf: ");
-            Serial.println(shared.astrodev.buffer_full);
-            threads.delay(1000);
-        }
-        // All other errors are actual errors
-        else if (iretn < 0)
-        {
-            ++errSend;
-            break;
-        }
-        // Transmit success
-        if(iretn >= 0)
-        {
-            break;
-        }
-        // Retry 3 times
-        if(retries++ > 3)
-        {
-            ++errSend;
-            break;
+            // Retry 3 times
+            if(++retries > 3)
+            {
+                break;
+            }
+            // Wait until transfer buffer is not full
+            threads.delay(100);
+            iretn = shared.astrodev.Ping();
+            if (iretn < 0)
+            {
+                ++errSend;
+            }
+            if (!shared.astrodev.buffer_full)
+            {
+                threads.delay(10);
+                // Return to start of loop to attempt transmit
+                continue;
+            }
         }
     };
 

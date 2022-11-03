@@ -8,6 +8,13 @@ void sendpacket(Cosmos::Support::PacketComm &packet);
 //! Global shared resources defined here
 shared_resources shared(Serial5);
 
+namespace
+{
+    int32_t iretn = 0;
+    // Reusable packet objects
+    Cosmos::Support::PacketComm packet;
+}
+
 void setup()
 {
     // initialize LED digital pin as an output.
@@ -21,8 +28,8 @@ void setup()
     // Setup serial stuff
     Serial.begin(115200);
 
-    //shared = shared_resources(Serial5);
-    int32_t iretn = shared.init_radio(&Serial8, 9600);
+    // Initialize the astrodev radio
+    iretn = shared.init_radio(&Serial8, ASTRODEV_BAUD);
     if (iretn < 0)
     {
         Serial.println("Error initializing Astrodev radio. Exiting...");
@@ -30,12 +37,10 @@ void setup()
     }
     Serial.println("Radio init successful");
 
-    /*
-    // Start recv loop
-    //threads.addThread(recv_loop);
-    */
     // TODO: determine more appropriate stack size
-    threads.addThread(Cosmos::Radio_interface::send_loop, 0, 6000);
+    // Start send/receive loops
+    threads.addThread(Cosmos::Radio_interface::recv_loop, 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Radio_interface::send_loop, 0, TXS_STACK_SIZE);
 
     Serial.println("Setup complete");
 
@@ -78,6 +83,25 @@ void loop()
     // int32_t iretn = astrodev.Ping();
     // Serial.print(" iretn: ");
     // Serial.println(iretn);
+
+    // Send all received packets to iobc
+    iretn = shared.pop_recv(packet);
+    if (iretn >= 0)
+    {
+        Serial.print("I have a packet, buf size: ");
+        Serial.println(iretn);
+        char msg[4];
+        Serial.print("main: ");
+        for (uint16_t i=0; i<packet.data.size(); i++)
+        {
+            sprintf(msg, "0x%02X", packet.data[i]);
+            Serial.print(msg);
+            Serial.print(" ");
+        }
+        Serial.println();
+    }
+
+    shared.astrodev.GetTelemetry();
 
     threads.delay(5000);
 }
