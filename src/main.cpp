@@ -1,22 +1,11 @@
-/*
- * Blink
- * Turns on an LED on for one second,
- * then off for one second, repeatedly.
- */
-
-// #include <Arduino.h>
-// #include <map>
-// #include <TeensyThreads.h>
-// #include <SLIPEncodedSerial.h>
-
-// #include <iterator>
 #include "shared_resources.h"
-// #include "math/bytelib.h"
-// #include "math/crclib.h"
+#include "channels/recv_loop.h"
+#include "channels/send_loop.h"
 
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
 
+//! Global shared resources defined here
 shared_resources shared(Serial5);
 
 void setup()
@@ -39,26 +28,23 @@ void setup()
         Serial.println("Error initializing Astrodev radio. Exiting...");
         exit(-1);
     }
+    Serial.println("Radio init successful");
 
     /*
-    SLIPHWSerial.begin(115200);
-    Serial.clear();
-    HWSERIAL.clear();
-
     // Start recv loop
     //threads.addThread(recv_loop);
     */
+    // TODO: determine more appropriate stack size
+    threads.addThread(Cosmos::Radio_interface::send_loop, 0, 6000);
+
+    Serial.println("Setup complete");
+
 }
 
-PacketComm tpacket;
-int32_t iretnSend = 0;
-
-int32_t sentNum = 0;
-int32_t errSend = 0;
-// TXS Loop
-// Empties array
+//! Main loop
 void loop()
 {
+    Serial.println("in main loop");
     /*
     // turn the LED on (HIGH is the voltage level)
     digitalWrite(LED_BUILTIN, HIGH);
@@ -93,78 +79,5 @@ void loop()
     // Serial.print(" iretn: ");
     // Serial.println(iretn);
 
-    // Testing message transmissions
-    iretnSend = shared.pop_send(tpacket);
-    if (iretnSend >= 0)
-    {
-        sendpacket(tpacket);
-    } else {
-        Serial.println("send buf empty");
-        threads.delay(1000);
-    }
-
-    // wait for 3 seconds
-    threads.delay(10);
-    if (sentNum > 100)
-    {
-        Serial.print("Sent: ");
-        Serial.println(sentNum);
-        Serial.print("Errors: ");
-        Serial.println(errSend);
-        exit(-1);
-    }
-    //threads.idle();
+    threads.delay(5000);
 }
-
-void sendpacket(Cosmos::Support::PacketComm &packet)
-{
-    uint8_t retries = 0;
-    Serial.print(sentNum++);
-    Serial.println(" | Transmit message...");
-    Cosmos::Devices::Radios::Astrodev::frame response;
-    int32_t iretn = 0;
-    // Attempt resend on NACK
-    while(true)
-    {
-        iretn = shared.astrodev.Transmit(packet);
-        Serial.print("Transmit iretn: ");
-        Serial.println(iretn);
-        if (iretn < 0)
-        {
-            ++errSend;
-        break;
-        }
-        iretn = shared.astrodev.Receive(response);
-        Serial.print("Recieve iretn: ");
-        Serial.println(iretn);
-        // Wait abit on NACK or if the transmit buffer is full
-        if (iretn == COSMOS_ASTRODEV_ERROR_NACK || shared.astrodev.buffer_full)
-        {
-            Serial.print("iretn: ");
-            Serial.print(iretn);
-            Serial.print(" buf: ");
-            Serial.println(shared.astrodev.buffer_full);
-            threads.delay(1000);
-        }
-        // All other errors are actual errors
-        else if (iretn < 0)
-        {
-            ++errSend;
-            break;
-        }
-        // Transmit success
-        if(iretn >= 0)
-        {
-            break;
-        }
-        // Retry 3 times
-        if(retries++ > 3)
-        {
-            ++errSend;
-            break;
-        }
-    };
-
-    return;
-}
-
