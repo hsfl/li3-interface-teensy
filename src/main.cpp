@@ -1,12 +1,12 @@
 #include "shared_resources.h"
-#include "channels/recv_loop.h"
-#include "channels/send_loop.h"
+#include "module/radio_recv.h"
+#include "module/radio_send.h"
 
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
 
 //! Global shared resources defined here
-shared_resources shared(Serial5);
+shared_resources shared(Serial1);
 
 namespace
 {
@@ -29,7 +29,7 @@ void setup()
     Serial.begin(115200);
 
     // Initialize the astrodev radio
-    iretn = shared.init_radio(&Serial8, ASTRODEV_BAUD);
+    iretn = shared.init_radio(&Serial5, ASTRODEV_BAUD);
     if (iretn < 0)
     {
         Serial.println("Error initializing Astrodev radio. Exiting...");
@@ -39,8 +39,8 @@ void setup()
 
     // TODO: determine more appropriate stack size
     // Start send/receive loops
-    threads.addThread(Cosmos::Radio_interface::recv_loop, 0, RXS_STACK_SIZE);
-    threads.addThread(Cosmos::Radio_interface::send_loop, 0, TXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::rxs_loop, 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::txs_loop, 0, TXS_STACK_SIZE);
 
     Serial.println("Setup complete");
 
@@ -84,24 +84,31 @@ void loop()
     // Serial.print(" iretn: ");
     // Serial.println(iretn);
 
+    // Handle all packets in recv queue, process or forward to iobc
+    // In this case, they are all forwarded
+    // Recv->Iobc | (process)
+
+    // Take everything from iobc and process or forward to tx queue
+    // Iobc->tx | process
+
     // Send all received packets to iobc
-    iretn = shared.pop_recv(packet);
-    if (iretn >= 0)
-    {
-        Serial.print("I have a packet, buf size: ");
-        Serial.println(iretn);
-        char msg[4];
-        Serial.print("main: ");
-        for (uint16_t i=0; i<packet.data.size(); i++)
-        {
-            sprintf(msg, "0x%02X", packet.data[i]);
-            Serial.print(msg);
-            Serial.print(" ");
-        }
-        Serial.println();
-    }
+    // iretn = shared.pop_recv(packet);
+    // if (iretn >= 0)
+    // {
+    //     Serial.print("I have a packet, buf size: ");
+    //     Serial.println(iretn);
+    //     char msg[4];
+    //     Serial.print("main: ");
+    //     for (uint16_t i=0; i<packet.data.size(); i++)
+    //     {
+    //         sprintf(msg, "0x%02X", packet.data[i]);
+    //         Serial.print(msg);
+    //         Serial.print(" ");
+    //     }
+    //     Serial.println();
+    // }
 
-    shared.astrodev.GetTelemetry();
+    // shared.astrodev.GetTelemetry();
 
-    threads.delay(5000);
+    threads.delay(9000);
 }

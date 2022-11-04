@@ -6,6 +6,7 @@
 #include "support/cosmos-errno.h"
 #include <Arduino.h>
 #include <TeensyThreads.h>
+#include <atomic>
 
 namespace Cosmos {
     namespace Devices {
@@ -219,7 +220,7 @@ namespace Cosmos {
                 telemetry last_telem;
                 int32_t last_error = 0;
                 bool last_ack = false;
-                bool buffer_full = false;
+                std::atomic<bool> buffer_full;
                 Command last_command = Command::NAK;
                 tcv_config tcv_configuration;
 
@@ -235,11 +236,14 @@ namespace Cosmos {
                 // int32_t Packetize(PacketComm& packet);
                 // int32_t UnPacketize(PacketComm& packet);
                 int32_t Ping();
-                int32_t Ping(bool await_pong);
+                int32_t Ping(bool get_response);
                 int32_t Reset();
+                int32_t Reset(bool get_response);
                 // int32_t SendData(vector<uint8_t> data);
                 int32_t GetTCVConfig();
+                int32_t GetTCVConfig(bool get_response);
                 int32_t SetTCVConfig();
+                int32_t SetTCVConfig(bool get_response);
                 int32_t GetTelemetry();
                 int32_t SetRFConfig(rf_config config);
                 int32_t Transmit(frame &message);

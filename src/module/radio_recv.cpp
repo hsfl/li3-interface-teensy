@@ -1,5 +1,5 @@
+#include "module/radio_recv.h"
 #include "shared_resources.h"
-#include "channels/recv_loop.h"
 
 using namespace Cosmos::Devices::Radios;
 
@@ -16,13 +16,12 @@ namespace
 
 char buf[256];
 // RXS Loop
-void Cosmos::Radio_interface::recv_loop()
+void Cosmos::Module::Radio_interface::rxs_loop()
 {
     // int32_t iretn;
     packet.header.dest = 0;
-    Serial.println("recv_loop started");
-    // Wait for main loop to start
-    delay(1000);
+    Serial.println("rxs_loop started");
+    
     while (true)
     {
         threads.delay(10);
@@ -75,7 +74,7 @@ void Cosmos::Radio_interface::recv_loop()
         if (iretn < 0)
         {
             // Yield until successful read
-            threads.delay(10);
+            continue;
         }
         else
         {
@@ -118,6 +117,8 @@ void Cosmos::Radio_interface::recv_loop()
                 exit(-1);
                 break;
             }
+            Serial.print("pushing to main queue, cmd ");
+            Serial.println((uint16_t)cmd);
             shared.push_recv(packet);
         }
     }

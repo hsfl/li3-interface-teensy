@@ -1,5 +1,5 @@
 
-#include "channels/send_loop.h"
+#include "module/radio_send.h"
 #include "shared_resources.h"
 
 // Debug values
@@ -11,16 +11,16 @@ extern shared_resources shared;
 
 namespace
 {
-    int32_t iretn = 0;
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
-    Cosmos::Devices::Radios::Astrodev::frame response;
+    // Cosmos::Devices::Radios::Astrodev::frame response;
 }
 
 // TXS Loop
-void Cosmos::Radio_interface::send_loop()
+void Cosmos::Module::Radio_interface::txs_loop()
 {
-    Serial.println("send_loop started");
+    Serial.println("txs_loop started");
+    int32_t iretn = 0;
 
     // TXS loop continually attempts to flush its outgoing packet queue
     while(true)
@@ -29,7 +29,7 @@ void Cosmos::Radio_interface::send_loop()
         iretn = shared.pop_send(packet);
         if (iretn >= 0)
         {
-            Cosmos::Radio_interface::send_packet();
+            Cosmos::Module::Radio_interface::send_packet();
         } else {
             // Send queue was empty
             threads.delay(1000);
@@ -38,13 +38,13 @@ void Cosmos::Radio_interface::send_loop()
         // Yield thread
         threads.delay(10);
         // ------- Stuff below here for debugging, remove later
-        if (sentNum > 24)
+        if (sentNum > 124)
         {
             Serial.print("Sent: ");
             Serial.println(sentNum);
             Serial.print("Errors: ");
             Serial.println(errSend);
-            Serial.println("Returning from send_loop");
+            Serial.println("Returning from txs_loop");
             return;
         }
         Cosmos::Support::PacketComm p;
@@ -56,15 +56,16 @@ void Cosmos::Radio_interface::send_loop()
 }
 
 //! Send out a PacketComm packet with proper radio transmit buffer checks and retries
-void Cosmos::Radio_interface::send_packet()
+void Cosmos::Module::Radio_interface::send_packet()
 {
+    int32_t iretn = 0;
     uint8_t retries = 0;
     Serial.print(sentNum++);
     Serial.println(" | Transmit message...");
     // TODO: Attempt resend on NACK? Would be difficult to coordinate
     while(true)
     {
-        if (!shared.astrodev.buffer_full)
+        if (!shared.astrodev.buffer_full.load())
         {
             // Attempt transmit if transfer bull is not full
             iretn = shared.astrodev.Transmit(packet);
@@ -79,6 +80,7 @@ void Cosmos::Radio_interface::send_packet()
         }
         else
         {
+            Serial.println("Buffer full, waiting a bit");
             // Retry 3 times
             if(++retries > 3)
             {
@@ -86,13 +88,15 @@ void Cosmos::Radio_interface::send_packet()
             }
             // Wait until transfer buffer is not full
             threads.delay(100);
-            iretn = shared.astrodev.Ping();
+            // Let recv_loop handle getting the response back and clearing buffer_full flag
+            iretn = shared.astrodev.Ping(false);
             if (iretn < 0)
             {
                 ++errSend;
             }
-            if (!shared.astrodev.buffer_full)
+            if (!shared.astrodev.buffer_full.load())
             {
+                Serial.println("buffer full flag cleared");
                 threads.delay(10);
                 // Return to start of loop to attempt transmit
                 continue;

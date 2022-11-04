@@ -2,7 +2,7 @@
 
 int32_t shared_resources::init_radio(HardwareSerial* new_serial, uint32_t speed)
 {
-    int32_t iretn = astrodev.Init(&Serial8, 9600);
+    int32_t iretn = astrodev.Init(new_serial, 9600);
     if (iretn < 0)
     {
         Serial.println("Error initializing Astrodev radio. Exiting...");
