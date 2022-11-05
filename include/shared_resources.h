@@ -17,13 +17,11 @@ private:
     
 public:
 
-    shared_resources(HardwareSerial& hwserial) : HWSerial(&hwserial), SLIPHWSerial(hwserial)  {}
+    shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwserial), SLIPIobcSerial(hwserial)  {}
 
-    // Define hardware pin and wrap with SLIP helper class
-    // These are separate from the radio read/write pins,
-    // for use within the queue loops
-    HardwareSerial *HWSerial;
-    SLIPEncodedSerial SLIPHWSerial;
+    // These are the UART serial pins that communicate with the iobc
+    HardwareSerial *IobcSerial;
+    SLIPEncodedSerial SLIPIobcSerial;
 
 
     // Astrodev radio, has its own serial pin for read/write
@@ -31,18 +29,18 @@ public:
     int32_t init_radio(HardwareSerial* new_serial, uint32_t speed);
 
     // See if these can't be replaced by 2D arrays
-    std::deque<Cosmos::Support::PacketComm> recv_buffer;
-    std::deque<Cosmos::Support::PacketComm> send_buffer;
+    std::deque<Cosmos::Support::PacketComm> recv_queue;
+    std::deque<Cosmos::Support::PacketComm> send_queue;
+    std::deque<Cosmos::Support::PacketComm> main_queue;
 
     // Mutexes for accessing buffers
     Threads::Mutex recv_lock;
     Threads::Mutex send_lock;
+    Threads::Mutex main_lock;
 
     // Buffer accessors
-    int32_t pop_recv(Cosmos::Support::PacketComm &packet);
-    void push_recv(const Cosmos::Support::PacketComm &packet);
-    int32_t pop_send(Cosmos::Support::PacketComm &packet);
-    void push_send(const Cosmos::Support::PacketComm &packet);
+    int32_t pop_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, Cosmos::Support::PacketComm &packet);
+    void push_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, const Cosmos::Support::PacketComm &packet);
 
 };
 

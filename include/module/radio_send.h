@@ -1,5 +1,5 @@
-#ifndef _TXS_LOOP_H
-#define _TXS_LOOP_H
+#ifndef _RADIO_SEND_H
+#define _RADIO_SEND_H
 
 #include "shared_resources.h"
 

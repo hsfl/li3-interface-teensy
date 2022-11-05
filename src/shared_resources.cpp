@@ -54,42 +54,23 @@ int32_t shared_resources::init_radio(HardwareSerial* new_serial, uint32_t speed)
     return 0;
 }
 
-// Return -1 if buffer is empty, size of recv_buffer on success
-int32_t shared_resources::pop_recv(Cosmos::Support::PacketComm &packet)
+// Return -1 if buffer is empty, size of queue on success
+int32_t shared_resources::pop_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, Cosmos::Support::PacketComm &packet)
 {
-  Threads::Scope lock(recv_lock);
-  //std::vector<uint8_t> packet (std::make_move_iterator(recv_buffer.front().begin()), std::make_move_iterator(recv_buffer.front().end()));
-  if (!recv_buffer.size())
+  Threads::Scope lock(mutex);
+  if (!queue.size())
   {
       return -1;
   }
-  packet = recv_buffer.front();
-  recv_buffer.pop_front();
-  return recv_buffer.size();
+  //std::vector<uint8_t> packet (std::make_move_iterator(recv_queue.front().begin()), std::make_move_iterator(recv_queue.front().end()));
+  packet = queue.front();
+  queue.pop_front();
+  return queue.size();
 }
 
-void shared_resources::push_recv(const Cosmos::Support::PacketComm &packet)
+// Push a packet onto a queue
+void shared_resources::push_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, const Cosmos::Support::PacketComm &packet)
 {
-  Threads::Scope lock(recv_lock);
-  recv_buffer.push_back(packet);
-}
-
-// Return -1 if buffer is empty, size of send_buffer on success
-int32_t shared_resources::pop_send(Cosmos::Support::PacketComm &packet)
-{
-  Threads::Scope lock(send_lock);
-  if (!send_buffer.size())
-  {
-      return -1;
-  }
-  //std::vector<uint8_t> packet (std::make_move_iterator(recv_buffer.front().begin()), std::make_move_iterator(recv_buffer.front().end()));
-  packet = send_buffer.front();
-  send_buffer.pop_front();
-  return send_buffer.size();
-}
-
-void shared_resources::push_send(const Cosmos::Support::PacketComm &packet)
-{
-  Threads::Scope lock(send_lock);
-  send_buffer.push_back(packet);
+  Threads::Scope lock(mutex);
+  queue.push_back(packet);
 }

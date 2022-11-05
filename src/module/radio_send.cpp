@@ -26,7 +26,7 @@ void Cosmos::Module::Radio_interface::txs_loop()
     while(true)
     {
         // Send packet at front of queue
-        iretn = shared.pop_send(packet);
+        iretn = shared.pop_queue(shared.send_queue, shared.send_lock, packet);
         if (iretn >= 0)
         {
             Cosmos::Module::Radio_interface::send_packet();
@@ -48,8 +48,12 @@ void Cosmos::Module::Radio_interface::txs_loop()
             return;
         }
         Cosmos::Support::PacketComm p;
-        p.data.resize(1,0);
-        shared.push_send(p);
+        p.data.resize(100);
+        for (size_t i = 0; i < 100; ++i)
+        {
+            p.data[i] = i;
+        }
+        shared.push_queue(shared.send_queue, shared.send_lock, p);
         // ------- Debug end
     }
     return;

@@ -1,5 +1,5 @@
-#ifndef _RADIO_RECV_H
-#define _RADIO_RECV_H
+#ifndef _IOBC_RECV_H
+#define _IOBC_RECV_H
 
 #include "shared_resources.h"
 
@@ -9,7 +9,7 @@ namespace Cosmos
     {
         namespace Radio_interface
         {
-            void rxs_loop();
+            void iobc_recv_loop();
         }
     }
 };
