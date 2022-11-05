@@ -385,8 +385,7 @@ namespace Cosmos {
                 }
                 if (ch != SYNC1)
                 {
-                    Serial.println("devil's advocate");
-                    return -666;
+                    return COSMOS_ASTRODEV_ERROR_SYNC1;
                 }
                 message.preamble[0] = SYNC0;
                 message.preamble[1] = SYNC1;
