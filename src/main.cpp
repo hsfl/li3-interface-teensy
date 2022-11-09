@@ -1,4 +1,5 @@
 #include "shared_resources.h"
+#include "helpers/RadioCommands.h"
 #include "module/radio_recv.h"
 #include "module/radio_send.h"
 #include "module/iobc_recv.h"
@@ -15,7 +16,6 @@ namespace
     int32_t iretn = 0;
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
-    elapsedMillis telem_timer;
 }
 
 void setup()
@@ -54,14 +54,6 @@ void loop()
     // Process command-type packets for this program
     handle_main_queue_packets();
 
-    // Testing telem grabbing every 5 seconds
-    if (telem_timer > 5000)
-    {
-        telem_timer -= 5000;
-        Serial.println("Getting telemetry");
-        shared.astrodev.GetTelemetry();
-    }
-
     threads.delay(10);
 }
 
@@ -90,6 +82,11 @@ void handle_main_queue_packets()
         case PacketComm::TypeId::CommandPing:
             {
                 Serial.println("Pong!");
+            }
+            break;
+        case PacketComm::TypeId::CommandRadioCommunicate:
+            {
+                Lithium3::RadioCommand(packet);
             }
             break;
         case PacketComm::TypeId::DataRadioResponse:

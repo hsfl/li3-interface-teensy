@@ -42,6 +42,17 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         {
             continue;
         }
+        char msg[4];
+        Serial.print("wrapped ");
+        Serial.print(packet.wrapped.size());
+        Serial.print(": ");
+        for (uint16_t i=0; i<packet.wrapped.size(); i++)
+        {
+            sprintf(msg, "0x%02X", packet.wrapped[i]);
+            Serial.print(msg);
+            Serial.print(" ");
+        }
+        Serial.println();
         // Since this is an intermediate step, don't bother with crc check
         iretn = packet.Unwrap(false);
         if (iretn < 0)
@@ -65,22 +76,24 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
             exit(-1);
             break;
         }
-        // Serial.print("iretn: ");
-        // Serial.print(iretn);
-        // Serial.print(" size ");
-        // Serial.print(size);
-        // Serial.print(" wrapped.size ");
-        // Serial.print(packet.wrapped.size());
-        // Serial.print(" data.size ");
-        // Serial.println(packet.data.size());
-        // for (size_t i=0; i < packet.wrapped.size(); ++i) {
-        //     Serial.print(packet.wrapped[i]);
-        //     Serial.print(" ");
-        // }
-        // Serial.println();
-        // for (size_t i=0; i < packet.data.size(); ++i) {
-        //     Serial.print(char(packet.data[i]));
-        // }
-        // Serial.println();
+#ifdef DEBUG_PRINT
+        Serial.print("iretn: ");
+        Serial.print(iretn);
+        Serial.print(" size ");
+        Serial.print(size);
+        Serial.print(" wrapped.size ");
+        Serial.print(packet.wrapped.size());
+        Serial.print(" data.size ");
+        Serial.println(packet.data.size());
+        for (size_t i=0; i < packet.wrapped.size(); ++i) {
+            Serial.print(packet.wrapped[i]);
+            Serial.print(" ");
+        }
+        Serial.println();
+        for (size_t i=0; i < packet.data.size(); ++i) {
+            Serial.print(char(packet.data[i]));
+        }
+        Serial.println();
+#endif
     }
 }

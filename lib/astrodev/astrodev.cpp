@@ -83,7 +83,9 @@ namespace Cosmos {
                 // Skip payload and payload crc if header-only
                 if (message.header.sizehi == 0 && message.header.sizelo == 0)
                 {
+#ifdef DEBUG_PRINT
                     Serial.println();
+#endif
                     return message.header.sizelo;
                 }
 #ifdef DEBUG_PRINT
@@ -464,8 +466,10 @@ namespace Cosmos {
                 // Read rest of payload bytes
                 uint8_t size = message.header.sizelo;
                 size_t sizeToRead = size+2;
+#ifdef DEBUG_PRINT
                 Serial.print("size: ");
                 Serial.println(size);
+#endif
                 size_t readLocation = 0;
                 bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
 #ifdef DEBUG_PRINT

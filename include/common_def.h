@@ -13,4 +13,8 @@
 #define GROUND_NODE_ID 1
 #define IOBC_NODE_ID 12
 
+// TODO: Change to actual radio num later
+#define LI3RXS 0
+#define LI3TXS 1
+
 #endif
