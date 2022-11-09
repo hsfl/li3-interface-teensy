@@ -22,9 +22,11 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         threads.delay(10);
 
         uint16_t size = 0;
-        packet.wrapped.resize(256);
+        const size_t MAX_PACKET_SIZE = 256;
+        packet.wrapped.resize(MAX_PACKET_SIZE);
         // Continuously read from serial buffer until a packet is received
-        while(!shared.SLIPIobcSerial.endofPacket())
+        elapsedMillis elapsed;
+        while(!shared.SLIPIobcSerial.endofPacket() && size < MAX_PACKET_SIZE)
         {
             // If there are bytes in receive buffer to be read
             if (shared.SLIPIobcSerial.available())
@@ -34,18 +36,20 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
                 // already decodes SLIP encoding
                 packet.wrapped[size] = shared.SLIPIobcSerial.read();
                 size++;
+            } else {
+                //threads.yield();
             }
-            threads.yield();
+            //threads.yield();
         }
         packet.wrapped.resize(size);
         if (!packet.wrapped.size())
         {
             continue;
         }
+        threads.yield();
         char msg[4];
-        Serial.print("wrapped ");
-        Serial.print(packet.wrapped.size());
-        Serial.print(": ");
+        Serial.print(elapsed);
+        Serial.print(" wrapped ");
         for (uint16_t i=0; i<packet.wrapped.size(); i++)
         {
             sprintf(msg, "0x%02X", packet.wrapped[i]);
@@ -55,6 +59,9 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         Serial.println();
         // Since this is an intermediate step, don't bother with crc check
         iretn = packet.Unwrap(false);
+        Serial.print(packet.wrapped.size());
+        Serial.print(":");
+        Serial.println(packet.header.data_size);
         if (iretn < 0)
         {
             Serial.println("Unwrap error");

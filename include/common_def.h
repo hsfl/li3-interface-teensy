@@ -9,6 +9,8 @@
 #define RXS_STACK_SIZE 6000
 #define TXS_STACK_SIZE 6000
 
+#define READ_BUFFER_SIZE 512
+
 // Node ids from nodeids.ini, hardcoded here
 #define GROUND_NODE_ID 1
 #define IOBC_NODE_ID 12

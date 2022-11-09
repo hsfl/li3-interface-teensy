@@ -9,6 +9,7 @@
 #define HWSERIAL Serial1
 SLIPEncodedSerial SLIPIobcSerial(HWSERIAL);
 
+
 namespace
 {
     int32_t iretn = 0;
@@ -81,12 +82,14 @@ void send_test_transmit_packet()
     packet.header.orig = IOBC_NODE_ID;
     packet.header.dest = GROUND_NODE_ID;
     packet.header.radio = 0;
-    const size_t REPEAT = 14;
-    packet.data.resize(sizeof(send_counter)*REPEAT);
+    const size_t REPEAT = 124;
+    // ascend from 0 to REPEAT-1, then last 4 bytes is packet number
+    packet.data.resize(REPEAT + sizeof(send_counter));
     for (size_t i = 0; i < REPEAT; ++i)
     {
-        memcpy(packet.data.data()+i*sizeof(send_counter), &send_counter, sizeof(send_counter));
+        packet.data[i] = i & 0xFF;
     }
+    memcpy(packet.data.data()+REPEAT, &send_counter, sizeof(send_counter));
     iretn = packet.SLIPPacketize();
     if (iretn)
     {
@@ -94,10 +97,25 @@ void send_test_transmit_packet()
         digitalWrite(LED_BUILTIN, HIGH);
         threads.delay(10);
         HWSERIAL.write(packet.packetized.data(), packet.packetized.size());
+        // SLIPIobcSerial.beginPacket();
+        // SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
+        // SLIPIobcSerial.endPacket();
+
         Serial.print("wrapped.size:");
         Serial.print(packet.wrapped.size());
         Serial.print(" packetized.size:");
-        Serial.println(packet.packetized.size());
+        Serial.print(packet.packetized.size());
+        Serial.print(" write size: ");
+        Serial.println(HWSERIAL.availableForWrite());
+        char msg[4];
+        Serial.print("wrapped: ");
+        for (uint16_t i=0; i<packet.wrapped.size(); i++)
+        {
+            sprintf(msg, "0x%02X", packet.wrapped[i]);
+            Serial.print(msg);
+            Serial.print(" ");
+        }
+        Serial.println();
         // turn the LED off by making the voltage LOW
         digitalWrite(LED_BUILTIN, LOW);
         threads.delay(10);
