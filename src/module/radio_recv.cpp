@@ -33,7 +33,7 @@ void Cosmos::Module::Radio_interface::rxs_loop()
         }
         else
         {
-            //packet.header.radio = ...; // Don't know atm
+            //packet.header.radio = ...; // TODO: Don't know atm
 
             packet.header.dest = IOBC_NODE_ID;
             packet.header.orig = GROUND_NODE_ID;
@@ -43,6 +43,7 @@ void Cosmos::Module::Radio_interface::rxs_loop()
             switch (cmd)
             {
             // 0 is Acknowledge-type, view comment on return types for Astrodev::Receive()
+            // Though this does mean that I can't distinguish between acks and noacks
             case (Astrodev::Command)0:
                 continue;
             case Astrodev::Command::GETTCVCONFIG:

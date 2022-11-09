@@ -20,30 +20,30 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
     while (true)
     {
         threads.delay(10);
-        Serial.println("I'm here 000");
 
         uint16_t size = 0;
         packet.wrapped.resize(256);
+        // Continuously read from serial buffer until a packet is received
         while(!shared.SLIPIobcSerial.endofPacket())
         {
-            Serial.println(".");
-            // len is either 0 (done) or 1 (not end)
-            uint8_t len = shared.SLIPIobcSerial.available();
             // If there are bytes in receive buffer to be read
-            if (len > 0)
+            if (shared.SLIPIobcSerial.available())
             {
                 // Read a slip packet
-                while(len--)
-                {
                 // Note: goes into wrapped because SLIPIobcSerial.read()
                 // already decodes SLIP encoding
                 packet.wrapped[size] = shared.SLIPIobcSerial.read();
                 size++;
-                }
             }
+            threads.yield();
         }
         packet.wrapped.resize(size);
-        iretn = packet.Unwrap();
+        if (!packet.wrapped.size())
+        {
+            continue;
+        }
+        // Since this is an intermediate step, don't bother with crc check
+        iretn = packet.Unwrap(false);
         if (iretn < 0)
         {
             Serial.println("Unwrap error");
@@ -82,6 +82,5 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         //     Serial.print(char(packet.data[i]));
         // }
         // Serial.println();
-        Serial.println("I'm here");
     }
 }

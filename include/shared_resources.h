@@ -17,7 +17,7 @@ private:
     
 public:
 
-    shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwserial), SLIPIobcSerial(hwserial)  {}
+    shared_resources(HardwareSerial& hwserial);
 
     // These are the UART serial pins that communicate with the iobc
     HardwareSerial *IobcSerial;
@@ -29,12 +29,12 @@ public:
     int32_t init_radio(HardwareSerial* new_serial, uint32_t speed);
 
     // See if these can't be replaced by 2D arrays
-    std::deque<Cosmos::Support::PacketComm> recv_queue;
+    // std::deque<Cosmos::Support::PacketComm> recv_queue;
     std::deque<Cosmos::Support::PacketComm> send_queue;
     std::deque<Cosmos::Support::PacketComm> main_queue;
 
     // Mutexes for accessing buffers
-    Threads::Mutex recv_lock;
+    // Threads::Mutex recv_lock;
     Threads::Mutex send_lock;
     Threads::Mutex main_lock;
 

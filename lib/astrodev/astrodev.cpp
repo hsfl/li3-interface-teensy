@@ -54,8 +54,6 @@ namespace Cosmos {
             {
                 Threads::Scope lock(qmutex_out);
 
-                char msg[4];
-
                 if (message.header.sizelo > MTU)
                 {
                     return GENERAL_ERROR_BAD_SIZE;
@@ -67,6 +65,7 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.cs = CalcCS(&message.preamble[2], 4);
 #ifdef DEBUG_PRINT
+                char msg[4];
                 Serial.print("tpre: ");
                 for (uint16_t i=0; i<8; i++)
                 {

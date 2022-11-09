@@ -5,6 +5,7 @@
 
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
+void handle_main_queue_packets();
 
 //! Global shared resources defined here
 shared_resources shared(Serial1);
@@ -38,8 +39,8 @@ void setup()
 
     // TODO: determine more appropriate stack size
     // Start send/receive loops
-    //threads.addThread(Cosmos::Module::Radio_interface::rxs_loop, 0, RXS_STACK_SIZE);
-    //threads.addThread(Cosmos::Module::Radio_interface::txs_loop, 0, TXS_STACK_SIZE);
+    // threads.addThread(Cosmos::Module::Radio_interface::rxs_loop, 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::txs_loop, 0, TXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
 
     Serial.println("Setup complete");
@@ -49,28 +50,25 @@ void setup()
 //! Main loop
 void loop()
 {
-    Serial.println("in main loop");
+    // Process command-type packets for this program
+    handle_main_queue_packets();
 
-    // Handle all packets in recv queue, process or forward to iobc
-    // In this case, they are all forwarded
-    // Recv->Iobc | (process)
+    // 
 
-    // Take everything from iobc and process or forward to tx queue
-    // Iobc->tx | process
+    // shared.astrodev.GetTelemetry();
 
-    // Handle all packets in recv queue, process or forward to iobc
-    // In this case, they are all forwarded
-    // Recv->Iobc | (process)
+    threads.delay(10);
+}
 
-    // Take everything from iobc and process or forward to tx queue
-    // Iobc->tx | process
-
+// Any packets inside the main queue are command-type packets
+// intended for this program to process in some way.
+void handle_main_queue_packets()
+{
     // Send all received packets to iobc
     iretn = shared.pop_queue(shared.main_queue, shared.main_lock, packet);
     if (iretn >= 0)
     {
-        Serial.print("I have a packet, buf size: ");
-        Serial.println(iretn);
+#ifdef DEBUG_PRINT
         char msg[4];
         Serial.print("main: ");
         for (uint16_t i=0; i<packet.data.size(); i++)
@@ -80,9 +78,21 @@ void loop()
             Serial.print(" ");
         }
         Serial.println();
+#endif
+        using namespace Cosmos::Support;
+        switch(packet.header.type)
+        {
+        case PacketComm::TypeId::CommandPing:
+            {
+                Serial.println("Pong!");
+            }
+            break;
+        default:
+            {
+                Serial.println("Packet type not handled, exiting...");
+                exit(-1);
+            }
+            break;
+        }
     }
-
-    // shared.astrodev.GetTelemetry();
-
-    threads.delay(9000);
 }

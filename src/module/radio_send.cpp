@@ -30,7 +30,9 @@ void Cosmos::Module::Radio_interface::txs_loop()
         if (iretn >= 0)
         {
             Cosmos::Module::Radio_interface::send_packet();
-        } else {
+        }
+        else
+        {
             // Send queue was empty
             threads.delay(1000);
         }
@@ -38,7 +40,7 @@ void Cosmos::Module::Radio_interface::txs_loop()
         // Yield thread
         threads.delay(10);
         // ------- Stuff below here for debugging, remove later
-        if (sentNum > 124)
+        if (sentNum > 128)
         {
             Serial.print("Sent: ");
             Serial.println(sentNum);

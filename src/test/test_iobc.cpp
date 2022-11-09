@@ -27,9 +27,11 @@ void setup()
 
 int32_t iretn;
 Cosmos::Support::PacketComm packet;
+uint32_t send_counter = 0;
 
 void loop()
 {
+    ++send_counter;
     // turn the LED on (HIGH is the voltage level)
     digitalWrite(LED_BUILTIN, HIGH);
     Serial.println("sending!");
@@ -37,8 +39,12 @@ void loop()
     packet.header.orig = IOBC_NODE_ID;
     packet.header.dest = IOBC_NODE_ID;
     packet.header.radio = 0;
-    char str[12] = "hello world";
-    packet.data.insert(packet.data.end(), str, str + 12);
+    const size_t REPEAT = 4;
+    packet.data.resize(sizeof(send_counter)*REPEAT);
+    for (size_t i = 0; i < REPEAT; ++i)
+    {
+        memcpy(packet.data.data()+i*sizeof(send_counter), &send_counter, sizeof(send_counter));
+    }
     iretn = packet.SLIPPacketize();
     if (iretn)
     {

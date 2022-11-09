@@ -1,0 +1,31 @@
+
+Defining here the layout of the program
+---------------------------------------
+src/main.cpp is the entrypoint, it spawns four threads: 
+- Li-3 RXS recv
+- Li-3 TXS recv/send
+- iobc recv
+Each of the Lithium-3 radios need a recv thread for listening
+for responses from radio-commanding packets.
+The RXS recv thread additionally will be receiving packets from the ground,
+and the TXS needs an additional send thread for transmitting packets down to the ground.
+Any packet or response from the radio gets passed to the main queue.
+The iobc recv thread listens on the UART serial port connected to the iobc,
+and either forwards any transmit-type packets intended for the ground to the TXS send queue,
+or pushes it to the main queue for internal processing.
+The main queue holds either command-type packets intended for processing within this program,
+or are packets that are received from ground that must be forwarded to the iobc.
+
+In summary:
+-----------
+radio_recv: (RXS, TXS)
+packets -> main_queue
+
+radio_send: (TXS)
+for packet in send_queue: transmit packet down to ground
+
+iobc_recv:
+packets-> main_queue
+
+main thread:
+for packet in main_queue: process packet

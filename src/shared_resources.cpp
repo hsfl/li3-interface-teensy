@@ -1,5 +1,12 @@
 #include "shared_resources.h"
 
+shared_resources::shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwserial), SLIPIobcSerial(hwserial)
+{
+    SLIPIobcSerial.begin(115200);
+    IobcSerial->clear();
+    SLIPIobcSerial.flush();
+}
+
 int32_t shared_resources::init_radio(HardwareSerial* new_serial, uint32_t speed)
 {
     int32_t iretn = astrodev.Init(new_serial, 9600);
