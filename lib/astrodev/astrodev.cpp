@@ -152,8 +152,10 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
+#ifdef DEBUG_PRINT
                 Serial.print("PTransmit iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -167,8 +169,10 @@ namespace Cosmos {
 
                 threads.delay(10);
                 iretn = Receive(message);
+#ifdef DEBUG_PRINT
                 Serial.print("PReceive iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -190,8 +194,10 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
+#ifdef DEBUG_PRINT
                 Serial.print("RTransmit iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -243,8 +249,10 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
+#ifdef DEBUG_PRINT
                 Serial.print("GTransmit iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -283,8 +291,10 @@ namespace Cosmos {
                 message.header.sizelo = sizeof(tcv_configuration);
                 message.tcv = tcv_configuration;
                 iretn = Transmit(message);
+#ifdef DEBUG_PRINT
                 Serial.print("STransmit iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -318,8 +328,10 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
-                Serial.print("Transmit iretn: ");
+#ifdef DEBUG_PRINT
+                Serial.print("TTransmit iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -456,8 +468,10 @@ namespace Cosmos {
                 Serial.println(size);
                 size_t readLocation = 0;
                 bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
+#ifdef DEBUG_PRINT
                 Serial.print("bytesRead: ");
                 Serial.println(bytesRead);
+#endif
                 uint8_t iterations = 0;
                 // Read in remaining bytes, if any
                 while (bytesRead != sizeToRead)
@@ -466,8 +480,10 @@ namespace Cosmos {
                     readLocation += bytesRead;
                     threads.delay(500);
                     bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
+#ifdef DEBUG_PRINT
                 Serial.print("bytesRead: ");
                 Serial.println(bytesRead);
+#endif
                     if (++iterations > 20)
                     {
                         break;

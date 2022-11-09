@@ -52,7 +52,7 @@ void Cosmos::Module::Radio_interface::rxs_loop()
                 packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
                 packet.data.resize(incoming_message.header.sizelo + 1);
                 packet.data[0] = (uint8_t)cmd;
-                memcpy(packet.data.data(), &incoming_message.payload[0], incoming_message.header.sizelo);
+                memcpy(packet.data.data()+1, &incoming_message.payload[0], incoming_message.header.sizelo);
                 break;
             case Astrodev::Command::RECEIVE:
                 // Packets from the ground will be in PacketComm protocol
@@ -73,8 +73,10 @@ void Cosmos::Module::Radio_interface::rxs_loop()
                 exit(-1);
                 break;
             }
+#ifdef DEBUG_PRINT
             Serial.print("pushing to main queue, cmd ");
             Serial.println((uint16_t)cmd);
+#endif
             shared.push_queue(shared.main_queue, shared.main_lock, packet);
         }
     }

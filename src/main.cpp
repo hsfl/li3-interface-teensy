@@ -15,6 +15,7 @@ namespace
     int32_t iretn = 0;
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
+    elapsedMillis telem_timer;
 }
 
 void setup()
@@ -39,7 +40,7 @@ void setup()
 
     // TODO: determine more appropriate stack size
     // Start send/receive loops
-    // threads.addThread(Cosmos::Module::Radio_interface::rxs_loop, 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::rxs_loop, 0, RXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::txs_loop, 0, TXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
 
@@ -53,9 +54,13 @@ void loop()
     // Process command-type packets for this program
     handle_main_queue_packets();
 
-    // 
-
-    // shared.astrodev.GetTelemetry();
+    // Testing telem grabbing every 5 seconds
+    if (telem_timer > 5000)
+    {
+        telem_timer -= 5000;
+        Serial.println("Getting telemetry");
+        shared.astrodev.GetTelemetry();
+    }
 
     threads.delay(10);
 }
@@ -85,6 +90,12 @@ void handle_main_queue_packets()
         case PacketComm::TypeId::CommandPing:
             {
                 Serial.println("Pong!");
+            }
+            break;
+        case PacketComm::TypeId::DataRadioResponse:
+            {
+                Serial.print("Radio response, cmd: ");
+                Serial.println(packet.data[0]);
             }
             break;
         default:
