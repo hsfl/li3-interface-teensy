@@ -265,7 +265,7 @@ void send_test_transmit_packet()
         digitalWrite(LED_BUILTIN, HIGH);
         threads.delay(10);
         fake_transmit(packet);
-
+#ifdef DEBUG_PRINT
         Serial.print("wrapped.size:");
         Serial.println(packet.wrapped.size());
         char msg[4];
@@ -277,6 +277,7 @@ void send_test_transmit_packet()
             Serial.print(" ");
         }
         Serial.println();
+#endif
         // turn the LED off by making the voltage LOW
         digitalWrite(LED_BUILTIN, LOW);
         threads.delay(10);

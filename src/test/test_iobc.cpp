@@ -1,14 +1,12 @@
-#include <Arduino.h>
-#include <map>
-#include <TeensyThreads.h>
-#include <SLIPEncodedSerial.h>
-
-#include "common_def.h"
-#include "support/packetcomm.h"
+#include "shared_resources.h"
+#include "module/iobc_recv.h"
 
 #define HWSERIAL Serial1
-SLIPEncodedSerial SLIPIobcSerial(HWSERIAL);
 
+//! Global shared resources defined here
+shared_resources shared(Serial1);
+
+void handle_main_queue_packets();
 
 namespace
 {
@@ -26,12 +24,12 @@ void setup()
 
     // Setup serial stuff
     Serial.begin(115200);
-    SLIPIobcSerial.begin(115200);
-    SLIPIobcSerial.flush();
 
     // Each thread tick length
     threads.setSliceMicros(10);
 
+    threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
+    
     threads.delay(2000);
 }
 
@@ -97,10 +95,7 @@ void send_test_transmit_packet()
         digitalWrite(LED_BUILTIN, HIGH);
         threads.delay(10);
         HWSERIAL.write(packet.packetized.data(), packet.packetized.size());
-        // SLIPIobcSerial.beginPacket();
-        // SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
-        // SLIPIobcSerial.endPacket();
-
+#ifdef DEBUG_PRINT
         Serial.print("wrapped.size:");
         Serial.print(packet.wrapped.size());
         Serial.print(" packetized.size:");
@@ -116,6 +111,7 @@ void send_test_transmit_packet()
             Serial.print(" ");
         }
         Serial.println();
+#endif
         // turn the LED off by making the voltage LOW
         digitalWrite(LED_BUILTIN, LOW);
         threads.delay(10);
@@ -128,6 +124,9 @@ void send_test_transmit_packet()
 
 void loop()
 {
+    // Process command-type packets for this program
+    handle_main_queue_packets();
+
     // Get telem every 5 seconds
     if (telem_timer > 5000)
     {
@@ -145,4 +144,45 @@ void loop()
     threads.delay(10);
 }
 
-
+// Any packets inside the main queue are command-type packets
+// intended for this program to process in some way.
+void handle_main_queue_packets()
+{
+    // Send all received packets to iobc
+    iretn = shared.pop_queue(shared.main_queue, shared.main_lock, packet);
+    if (iretn >= 0)
+    {
+#ifdef DEBUG_PRINT
+        char msg[4];
+        Serial.print("main: ");
+        for (uint16_t i=0; i<packet.data.size(); i++)
+        {
+            sprintf(msg, "0x%02X", packet.data[i]);
+            Serial.print(msg);
+            Serial.print(" ");
+        }
+        Serial.println();
+#endif
+        using namespace Cosmos::Support;
+        switch(packet.header.type)
+        {
+        case PacketComm::TypeId::CommandPing:
+            {
+                Serial.println("Pong!");
+            }
+            break;
+        case PacketComm::TypeId::DataRadioResponse:
+            {
+                Serial.print("Radio response, cmd: ");
+                Serial.println(packet.data[0]);
+            }
+            break;
+        default:
+            {
+                Serial.println("Packet type not handled. Exiting...");
+                exit(-1);
+            }
+            break;
+        }
+    }
+}

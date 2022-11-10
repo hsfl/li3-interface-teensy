@@ -81,11 +81,6 @@ void handle_main_queue_packets()
         using namespace Cosmos::Support;
         switch(packet.header.type)
         {
-        case PacketComm::TypeId::CommandPing:
-            {
-                Serial.println("Pong!");
-            }
-            break;
         case PacketComm::TypeId::CommandRadioCommunicate:
             {
                 Lithium3::RadioCommand(packet);
@@ -99,8 +94,11 @@ void handle_main_queue_packets()
             break;
         default:
             {
-                Serial.println("Packet type not handled, exiting...");
-                exit(-1);
+                Serial.println("Packet type not handled, forwarding to iobc");
+                packet.Wrap();
+                shared.SLIPIobcSerial.beginPacket();
+                shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
+                shared.SLIPIobcSerial.endPacket();
             }
             break;
         }
