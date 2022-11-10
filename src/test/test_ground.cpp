@@ -12,7 +12,8 @@ shared_resources shared(Serial1);
 void send_test_transmit_packet();
 void handle_main_queue_packets();
 void fake_radio_response_creator(Astrodev::Command cmd);
-int32_t fake_radio_response_send(Astrodev::frame &message, uint8_t type, uint8_t size);
+int32_t fake_transmit(Astrodev::frame &message, uint8_t size);
+int32_t fake_transmit(PacketComm& packet);
 
 
 namespace
@@ -23,6 +24,7 @@ namespace
     elapsedMillis telem_timer;
     elapsedMillis transmit_timer;
     bool initialized = false;
+    Astrodev::frame tmessage;
 }
 
 void setup()
@@ -127,7 +129,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
             message.header.command = (uint8_t)Astrodev::Command::NOOP;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
-            fake_radio_response_send(message, Astrodev::RESPONSE, 0);
+            fake_transmit(message, 0);
         }
         break;
     case Astrodev::Command::RESET:
@@ -135,7 +137,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
             message.header.command = (uint8_t)Astrodev::Command::RESET;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
-            fake_radio_response_send(message, Astrodev::RESPONSE, 0);
+            fake_transmit(message, 0);
         }
         break;
     case Astrodev::Command::GETTCVCONFIG:
@@ -158,7 +160,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
             memcpy(shared.astrodev_txs.tcv_configuration.ax25_source, "SOURCE", 6);
             memcpy(shared.astrodev_txs.tcv_configuration.ax25_destination, "DESTIN", 6);
             memcpy(&message.payload[0], &shared.astrodev_txs.tcv_configuration, sizeof(shared.astrodev_txs.tcv_configuration));
-            fake_radio_response_send(message, Astrodev::RESPONSE, sizeof(shared.astrodev_txs.tcv_configuration));
+            fake_transmit(message, sizeof(shared.astrodev_txs.tcv_configuration));
             
             // Li3 switcher board radio initialization completes when this GETTCVCONFIG returns successfully
             threads.delay(1000);
@@ -170,7 +172,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
             message.header.command = (uint8_t)Astrodev::Command::SETTCVCONFIG;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
-            fake_radio_response_send(message, Astrodev::RESPONSE, 0);
+            fake_transmit(message, 0);
         }
         break;
     default:
@@ -183,11 +185,14 @@ void fake_radio_response_creator(Astrodev::Command cmd)
 // and the actual size of the payload must be provided here as an argument.
 // The command type is the direction of the message, RESPONSE is for faking a radio response,
 // COMMAND is for making an actual radio command.
-int32_t fake_radio_response_send(Astrodev::frame &message, uint8_t type, uint8_t size)
+int32_t fake_transmit(Astrodev::frame &message, uint8_t size)
 {
+    // Wait a little bit
+    threads.delay(10);
     message.header.sync0 = Astrodev::SYNC0;
     message.header.sync1 = Astrodev::SYNC1;
-    message.header.type = type;
+    // These frames are mocks of incoming stuff from the radio, so type if RESPONSE
+    message.header.type = Astrodev::RESPONSE;
     message.header.cs = shared.astrodev_txs.CalcCS(&message.preamble[2], 4);
     HWSERIAL.write(&message.preamble[0], 8);
 
@@ -214,6 +219,30 @@ int32_t fake_radio_response_send(Astrodev::frame &message, uint8_t type, uint8_t
     return message.header.sizelo + 10;
 }
 
+// Fake a sending of a PacketComm packet
+int32_t fake_transmit(Cosmos::Support::PacketComm &packet)
+{
+    // Apply packetcomm protocol wrapping
+    int32_t iretn = packet.Wrap();
+    if (iretn < 0)
+    {
+        return iretn;
+    }
+
+    // Other side will receive it, so this is RECEIVE type
+    tmessage.header.command = (uint8_t)Astrodev::Command::RECEIVE;
+    tmessage.header.sizelo = packet.wrapped.size();
+    tmessage.header.sizehi = 0;
+    if (tmessage.header.sizelo > Astrodev::MTU)
+    {
+        return GENERAL_ERROR_BAD_SIZE;
+    }
+
+    memcpy(&tmessage.payload[0], packet.wrapped.data(), packet.wrapped.size());
+    
+    return fake_transmit(tmessage, packet.wrapped.size());
+}
+
 // Send a test packet from the "ground" to the iobc
 void send_test_transmit_packet()
 {
@@ -235,7 +264,7 @@ void send_test_transmit_packet()
         // turn the LED on (HIGH is the voltage level)
         digitalWrite(LED_BUILTIN, HIGH);
         threads.delay(10);
-        shared.astrodev_txs.Transmit(packet);
+        fake_transmit(packet);
 
         Serial.print("wrapped.size:");
         Serial.println(packet.wrapped.size());

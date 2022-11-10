@@ -42,6 +42,7 @@ void setup()
     // Start send/receive loops
     // threads.addThread(shared., 0, RXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::rxs_recv_loop, 0, RXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::txs_recv_loop, 0, RXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
 

@@ -68,7 +68,7 @@ void Cosmos::Module::Radio_interface::rxs_recv_loop()
             default:
                 Serial.print("cmd ");
                 Serial.print((uint16_t)cmd);
-                Serial.println("not (yet) handled. Terminating...");
+                Serial.println(" not (yet) handled. Terminating...");
                 exit(-1);
                 break;
             }
