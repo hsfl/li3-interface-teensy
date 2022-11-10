@@ -10,11 +10,16 @@ namespace Cosmos {
                 buffer_full = false;
             }
 
-            int32_t Astrodev::Init(HardwareSerial* new_serial, uint32_t baud_rate)
+            Astrodev::Astrodev(HardwareSerial* hw_serial) : serial(hw_serial)
+            {
+                buffer_full = false;
+            }
+
+            int32_t Astrodev::Init(HardwareSerial* hw_serial, uint32_t baud_rate)
             {
                 int32_t iretn = 0;
                 int32_t retries = 5;
-                serial = new_serial;
+                serial = hw_serial;
                 serial->begin(baud_rate);
                 serial->clear();
                 serial->flush();
@@ -220,22 +225,6 @@ namespace Cosmos {
                 }
                 return iretn;
             }
-
-            // int32_t Astrodev::SendData(vector<uint8_t> data)
-            // {
-            //     int32_t iretn;
-            //     frame message;
-
-            //     if (data.size() > MTU)
-            //     {
-            //         return GENERAL_ERROR_BAD_SIZE;
-            //     }
-            //     message.header.command = (uint8_t)Command::RESET;
-            //     message.header.size = data.size();
-            //     memcpy(message.payload, &data[0], data.size());
-            //     iretn = Transmit(message);
-            //     return iretn;
-            // }
 
             int32_t Astrodev::GetTCVConfig()
             {
@@ -463,8 +452,15 @@ namespace Cosmos {
                     return ASTRODEV_ERROR_NACK;
                 }
 
-                // Read rest of payload bytes
+                // TODO: This !size check was put in to fake some radio command handling,
+                // should double-check that it doesn't break anything.
+                // If not an ack-type, then return if no payload
                 uint8_t size = message.header.sizelo;
+                if (!size)
+                {
+                    return message.header.command;
+                }
+                // Read rest of payload bytes
                 size_t sizeToRead = size+2;
 #ifdef DEBUG_PRINT
                 Serial.print("size: ");
@@ -656,6 +652,11 @@ namespace Cosmos {
             //         }
             //     }
             // }
+
+            void Astrodev::setSerial(HardwareSerial* new_serial)
+            {
+                serial = new_serial;
+            }
         }
     }
 }

@@ -13,14 +13,14 @@ shared_resources::shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwser
 int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rxs, HardwareSerial* hw_serial_txs, uint32_t baud_rate)
 {
     int32_t iretn = 0;
-    // Serial.println("Initializing RXS");
-    // iretn = init_radio(astrodev_rxs, hw_serial_rxs, baud_rate);
-    // if (iretn < 0)
-    // {
-    //     Serial.println("RXS Initialization failed");
-    //     return iretn;
-    // }
-    // Serial.println("RXS Initialization success");
+    Serial.println("Initializing RXS");
+    iretn = init_radio(astrodev_rxs, hw_serial_rxs, baud_rate);
+    if (iretn < 0)
+    {
+        Serial.println("RXS Initialization failed");
+        return iretn;
+    }
+    Serial.println("RXS Initialization success");
     Serial.println("Initializing TXS");
     iretn = init_radio(astrodev_txs, hw_serial_txs, baud_rate);
     if (iretn < 0)
