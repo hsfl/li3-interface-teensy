@@ -10,12 +10,12 @@ namespace Cosmos {
                 buffer_full = false;
             }
 
-            int32_t Astrodev::Init(HardwareSerial* new_serial, uint32_t speed)
+            int32_t Astrodev::Init(HardwareSerial* new_serial, uint32_t baud_rate)
             {
                 int32_t iretn = 0;
                 int32_t retries = 5;
                 serial = new_serial;
-                serial->begin(speed);
+                serial->begin(baud_rate);
                 serial->clear();
                 serial->flush();
 

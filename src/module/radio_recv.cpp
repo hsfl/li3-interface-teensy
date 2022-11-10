@@ -14,8 +14,7 @@ namespace
     Astrodev::frame incoming_message;
 }
 
-// RXS Loop
-void Cosmos::Module::Radio_interface::rxs_loop()
+void Cosmos::Module::Radio_interface::recv_loop()
 {
     // int32_t iretn;
     packet.header.dest = 0;

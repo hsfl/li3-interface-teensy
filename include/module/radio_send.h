@@ -10,7 +10,7 @@ namespace Cosmos
         namespace Radio_interface
         {
             void send_packet();
-            void txs_loop();
+            void send_loop();
         }
     }
 }

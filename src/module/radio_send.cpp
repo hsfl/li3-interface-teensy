@@ -17,7 +17,7 @@ namespace
 }
 
 // TXS Loop
-void Cosmos::Module::Radio_interface::txs_loop()
+void Cosmos::Module::Radio_interface::send_loop()
 {
     Serial.println("txs_loop started");
     int32_t iretn = 0;
@@ -29,7 +29,7 @@ void Cosmos::Module::Radio_interface::txs_loop()
         iretn = shared.pop_queue(shared.send_queue, shared.send_lock, packet);
         if (iretn >= 0)
         {
-            Cosmos::Module::Radio_interface::send_packet();
+            send_packet();
         }
         else
         {

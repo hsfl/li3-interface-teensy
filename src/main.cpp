@@ -30,7 +30,7 @@ void setup()
     delay(4000);
 
     // Initialize the astrodev radio
-    iretn = shared.init_radio(&Serial5, ASTRODEV_BAUD);
+    iretn = shared.init_radios(&Serial2, &Serial5, ASTRODEV_BAUD);
     if (iretn < 0)
     {
         Serial.println("Error initializing Astrodev radio. Exiting...");
@@ -40,8 +40,8 @@ void setup()
 
     // TODO: determine more appropriate stack size
     // Start send/receive loops
-    threads.addThread(Cosmos::Module::Radio_interface::rxs_loop, 0, RXS_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::txs_loop, 0, TXS_STACK_SIZE);
+    // threads.addThread(shared., 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TXS_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
 
     Serial.println("Setup complete");

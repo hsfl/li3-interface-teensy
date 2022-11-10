@@ -9,7 +9,7 @@ namespace Cosmos
     {
         namespace Radio_interface
         {
-            void rxs_loop();
+            void recv_loop();
         }
     }
 };

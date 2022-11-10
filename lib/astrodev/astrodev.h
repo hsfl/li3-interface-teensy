@@ -231,7 +231,7 @@ namespace Cosmos {
                 // int32_t PacketOut(PacketComm &p);
                 // int32_t PacketOutSize();
                 // int32_t Clear(queue<PacketComm> &queue, mutex &mtx);
-                int32_t Init(HardwareSerial* serial, uint32_t speed=38400);
+                int32_t Init(HardwareSerial* serial, uint32_t baud_rate=38400);
                 // void Join();
                 // int32_t Packetize(PacketComm& packet);
                 // int32_t UnPacketize(PacketComm& packet);
