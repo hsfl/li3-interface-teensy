@@ -25,9 +25,8 @@ public:
 
 
     // Astrodev radio, has its own serial pin for read/write
-    // Cosmos::Devices::Radios::Astrodev astrodev_rxs;
-    // Cosmos::Devices::Radios::Astrodev astrodev_txs;
-    Cosmos::Devices::Radios::Astrodev astrodev;
+    Cosmos::Devices::Radios::Astrodev astrodev_rxs;
+    Cosmos::Devices::Radios::Astrodev astrodev_txs;
     //! Initializes RXS and TXS Astrodev radios
     int32_t init_radios(HardwareSerial* hw_serial_rxs, HardwareSerial* hw_serial_txs, uint32_t baud_rate);
 

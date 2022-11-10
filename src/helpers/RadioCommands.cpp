@@ -8,7 +8,7 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
     switch(packet.data[1])
     {
     case 7:
-        //shared.astrodev.GetTelemetry();
+        shared.astrodev_txs.GetTelemetry();
         break;
     default:
         break;

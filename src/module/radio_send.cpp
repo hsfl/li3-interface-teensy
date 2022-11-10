@@ -40,22 +40,22 @@ void Cosmos::Module::Radio_interface::send_loop()
         // Yield thread
         threads.delay(10);
         // ------- Stuff below here for debugging, remove later
-        if (sentNum > 128)
-        {
-            Serial.print("Sent: ");
-            Serial.println(sentNum);
-            Serial.print("Errors: ");
-            Serial.println(errSend);
-            Serial.println("Returning from txs_loop");
-            return;
-        }
-        Cosmos::Support::PacketComm p;
-        p.data.resize(100);
-        for (size_t i = 0; i < 100; ++i)
-        {
-            p.data[i] = i;
-        }
-        shared.push_queue(shared.send_queue, shared.send_lock, p);
+        // if (sentNum > 128)
+        // {
+        //     Serial.print("Sent: ");
+        //     Serial.println(sentNum);
+        //     Serial.print("Errors: ");
+        //     Serial.println(errSend);
+        //     Serial.println("Returning from txs_loop");
+        //     return;
+        // }
+        // Cosmos::Support::PacketComm p;
+        // p.data.resize(100);
+        // for (size_t i = 0; i < 100; ++i)
+        // {
+        //     p.data[i] = i;
+        // }
+        // shared.push_queue(shared.send_queue, shared.send_lock, p);
         // ------- Debug end
     }
     return;
@@ -71,10 +71,10 @@ void Cosmos::Module::Radio_interface::send_packet()
     // TODO: Attempt resend on NACK? Would be difficult to coordinate
     while(true)
     {
-        if (!shared.astrodev.buffer_full.load())
+        if (!shared.astrodev_txs.buffer_full.load())
         {
             // Attempt transmit if transfer bull is not full
-            iretn = shared.astrodev.Transmit(packet);
+            iretn = shared.astrodev_txs.Transmit(packet);
             Serial.print("Transmit iretn: ");
             Serial.println(iretn);
             if (iretn < 0)
@@ -95,12 +95,12 @@ void Cosmos::Module::Radio_interface::send_packet()
             // Wait until transfer buffer is not full
             threads.delay(100);
             // Let recv_loop handle getting the response back and clearing buffer_full flag
-            iretn = shared.astrodev.Ping(false);
+            iretn = shared.astrodev_txs.Ping(false);
             if (iretn < 0)
             {
                 ++errSend;
             }
-            if (!shared.astrodev.buffer_full.load())
+            if (!shared.astrodev_txs.buffer_full.load())
             {
                 Serial.println("buffer full flag cleared");
                 threads.delay(10);

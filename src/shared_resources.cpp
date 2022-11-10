@@ -22,7 +22,7 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rxs, HardwareSer
     // }
     // Serial.println("RXS Initialization success");
     Serial.println("Initializing TXS");
-    iretn = init_radio(astrodev, hw_serial_txs, baud_rate);
+    iretn = init_radio(astrodev_txs, hw_serial_txs, baud_rate);
     if (iretn < 0)
     {
         Serial.println("TXS Initialization failed");
