@@ -58,7 +58,7 @@ void loop()
         // Send transmit packets every second
         if (transmit_timer > 1000)
         {
-            transmit_timer -= 1000;
+            transmit_timer = 0;
             send_test_transmit_packet();
         }
     }
@@ -134,6 +134,9 @@ void fake_radio_response_creator(Astrodev::Command cmd)
         break;
     case Astrodev::Command::RESET:
         {
+            // Stop sending packets on reset
+            initialized = false;
+
             message.header.command = (uint8_t)Astrodev::Command::RESET;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
