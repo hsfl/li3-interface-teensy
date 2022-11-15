@@ -20,6 +20,9 @@ namespace
 
 void setup()
 {
+    // initialize LED digital pin as an output.
+    pinMode(LED_BUILTIN, OUTPUT);
+
     // Setup serial stuff
     Serial.begin(115200);
 
