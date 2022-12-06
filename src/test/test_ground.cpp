@@ -3,7 +3,7 @@
 
 using namespace Cosmos::Devices::Radios;
 
-// UART port to RXS recv port on li3 switcher board
+// UART port to RX recv port on li3 switcher board
 #define HWSERIAL Serial2
 
 //! Global shared resources defined here
@@ -34,7 +34,7 @@ void setup()
 
     // Setup serial stuff
     Serial.begin(115200);
-    shared.astrodev_txs.setSerial(&HWSERIAL);
+    shared.astrodev_tx.setSerial(&HWSERIAL);
     HWSERIAL.begin(ASTRODEV_BAUD);
     HWSERIAL.flush();
     HWSERIAL.clear();
@@ -42,7 +42,7 @@ void setup()
     // Each thread tick length
     threads.setSliceMicros(10);
 
-    threads.addThread(Cosmos::Module::Radio_interface::txs_recv_loop, 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
 
     Serial.println("Setup complete, starting test_ground");
 }
@@ -147,23 +147,23 @@ void fake_radio_response_creator(Astrodev::Command cmd)
         {
             message.header.command = (uint8_t)Astrodev::Command::GETTCVCONFIG;
             message.header.sizehi = 0;
-            message.header.sizelo = sizeof(shared.astrodev_txs.tcv_configuration);
-            shared.astrodev_txs.tcv_configuration.interface_baud_rate = 0;
-            shared.astrodev_txs.tcv_configuration.power_amp_level = 220;
-            shared.astrodev_txs.tcv_configuration.rx_baud_rate = 1;
-            shared.astrodev_txs.tcv_configuration.tx_baud_rate = 1;
-            shared.astrodev_txs.tcv_configuration.ax25_preamble_length = 20;
-            shared.astrodev_txs.tcv_configuration.ax25_postamble_length = 20;
-            shared.astrodev_txs.tcv_configuration.rx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-            shared.astrodev_txs.tcv_configuration.tx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-            shared.astrodev_txs.tcv_configuration.tx_freq_high = 450000 / 65536;
-            shared.astrodev_txs.tcv_configuration.tx_freq_low = 450000 % 65536;
-            shared.astrodev_txs.tcv_configuration.rx_freq_high = 450000 / 65536;
-            shared.astrodev_txs.tcv_configuration.rx_freq_low = 450000 % 65536;
-            memcpy(shared.astrodev_txs.tcv_configuration.ax25_source, "SOURCE", 6);
-            memcpy(shared.astrodev_txs.tcv_configuration.ax25_destination, "DESTIN", 6);
-            memcpy(&message.payload[0], &shared.astrodev_txs.tcv_configuration, sizeof(shared.astrodev_txs.tcv_configuration));
-            fake_transmit(message, sizeof(shared.astrodev_txs.tcv_configuration));
+            message.header.sizelo = sizeof(shared.astrodev_tx.tcv_configuration);
+            shared.astrodev_tx.tcv_configuration.interface_baud_rate = 0;
+            shared.astrodev_tx.tcv_configuration.power_amp_level = 220;
+            shared.astrodev_tx.tcv_configuration.rx_baud_rate = 1;
+            shared.astrodev_tx.tcv_configuration.tx_baud_rate = 1;
+            shared.astrodev_tx.tcv_configuration.ax25_preamble_length = 20;
+            shared.astrodev_tx.tcv_configuration.ax25_postamble_length = 20;
+            shared.astrodev_tx.tcv_configuration.rx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+            shared.astrodev_tx.tcv_configuration.tx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+            shared.astrodev_tx.tcv_configuration.tx_freq_high = 450000 / 65536;
+            shared.astrodev_tx.tcv_configuration.tx_freq_low = 450000 % 65536;
+            shared.astrodev_tx.tcv_configuration.rx_freq_high = 450000 / 65536;
+            shared.astrodev_tx.tcv_configuration.rx_freq_low = 450000 % 65536;
+            memcpy(shared.astrodev_tx.tcv_configuration.ax25_source, "SOURCE", 6);
+            memcpy(shared.astrodev_tx.tcv_configuration.ax25_destination, "DESTIN", 6);
+            memcpy(&message.payload[0], &shared.astrodev_tx.tcv_configuration, sizeof(shared.astrodev_tx.tcv_configuration));
+            fake_transmit(message, sizeof(shared.astrodev_tx.tcv_configuration));
             
             // Li3 switcher board radio initialization completes when this GETTCVCONFIG returns successfully
             threads.delay(1000);
@@ -196,7 +196,7 @@ int32_t fake_transmit(Astrodev::frame &message, uint8_t size)
     message.header.sync1 = Astrodev::SYNC1;
     // These frames are mocks of incoming stuff from the radio, so type if RESPONSE
     message.header.type = Astrodev::RESPONSE;
-    message.header.cs = shared.astrodev_txs.CalcCS(&message.preamble[2], 4);
+    message.header.cs = shared.astrodev_tx.CalcCS(&message.preamble[2], 4);
     HWSERIAL.write(&message.preamble[0], 8);
 
     // Skip payload and payload crc if header-only
@@ -210,7 +210,7 @@ int32_t fake_transmit(Astrodev::frame &message, uint8_t size)
         uint16_t cs;
         uint8_t csb[2];
     };
-    cs = shared.astrodev_txs.CalcCS(&message.preamble[2], 6+message.header.sizelo);
+    cs = shared.astrodev_tx.CalcCS(&message.preamble[2], 6+message.header.sizelo);
     message.payload[message.header.sizelo] = csb[0];
     message.payload[message.header.sizelo+1] = csb[1];
 

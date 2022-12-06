@@ -28,7 +28,7 @@ void setup()
     // Each thread tick length
     threads.setSliceMicros(10);
 
-    threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
     
     threads.delay(2000);
 }
@@ -40,8 +40,8 @@ void send_get_telem_packet()
     packet.header.dest = IOBC_NODE_ID;
     packet.header.radio = 0;
     packet.data.resize(4);
-    // Get rxs telem
-    packet.data[0] = LI3RXS;
+    // Get rx telem
+    packet.data[0] = LI3RX;
     packet.data[1] = 7;
     packet.data[2] = 0;
     packet.data[3] = 0;
@@ -56,8 +56,8 @@ void send_get_telem_packet()
         digitalWrite(LED_BUILTIN, LOW);
         threads.delay(10);
     }
-    // Get txs telem
-    packet.data[0] = LI3TXS;
+    // Get tx telem
+    packet.data[0] = LI3TX;
     iretn = packet.SLIPPacketize();
     if (iretn)
     {

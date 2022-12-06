@@ -11,14 +11,14 @@ namespace Lithium3
 {
     enum class ProgramState {
         RADIO_RETRY_ATTEMPT,
-        // RXS
-        RADIO_RXS_ATTEMPT_INIT,
-        RADIO_RXS_INIT_SUCCESS,
-        RADIO_RXS_INIT_FAIL,
-        // TXS
-        RADIO_TXS_ATTEMPT_INIT,
-        RADIO_TXS_INIT_SUCCESS,
-        RADIO_TXS_INIT_FAIL,
+        // RX
+        RADIO_RX_ATTEMPT_INIT,
+        RADIO_RX_INIT_SUCCESS,
+        RADIO_RX_INIT_FAIL,
+        // TX
+        RADIO_TX_ATTEMPT_INIT,
+        RADIO_TX_INIT_SUCCESS,
+        RADIO_TX_INIT_FAIL,
         // Final verdict
         INIT_SUCCESSFUL,
         INIT_FAIL,

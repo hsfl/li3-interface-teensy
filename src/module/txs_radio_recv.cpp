@@ -14,17 +14,17 @@ namespace
     Astrodev::frame incoming_message;
 }
 
-void Cosmos::Module::Radio_interface::txs_recv_loop()
+void Cosmos::Module::Radio_interface::tx_recv_loop()
 {
     // int32_t iretn;
     packet.header.dest = 0;
-    Serial.println("txs_recv_loop started");
+    Serial.println("tx_recv_loop started");
     
     while (true)
     {
         threads.delay(10);
 
-        iretn = shared.astrodev_txs.Receive(incoming_message);
+        iretn = shared.astrodev_tx.Receive(incoming_message);
         if (iretn < 0)
         {
             // Yield until successful read

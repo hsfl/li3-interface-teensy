@@ -25,10 +25,10 @@ public:
 
 
     // Astrodev radio, has its own serial pin for read/write
-    Cosmos::Devices::Radios::Astrodev astrodev_rxs;
-    Cosmos::Devices::Radios::Astrodev astrodev_txs;
-    //! Initializes RXS and TXS Astrodev radios
-    int32_t init_radios(HardwareSerial* hw_serial_rxs, HardwareSerial* hw_serial_txs, uint32_t baud_rate);
+    Cosmos::Devices::Radios::Astrodev astrodev_rx;
+    Cosmos::Devices::Radios::Astrodev astrodev_tx;
+    //! Initializes RX and TX Astrodev radios
+    int32_t init_radios(HardwareSerial* hw_serial_rx, HardwareSerial* hw_serial_tx, uint32_t baud_rate);
 
     // See if these can't be replaced by 2D arrays
     std::deque<Cosmos::Support::PacketComm> send_queue;

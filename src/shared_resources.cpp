@@ -11,35 +11,35 @@ shared_resources::shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwser
     SLIPIobcSerial.flush();
 }
 
-int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rxs, HardwareSerial* hw_serial_txs, uint32_t baud_rate)
+int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSerial* hw_serial_tx, uint32_t baud_rate)
 {
     using namespace Lithium3;
     int32_t iretn = 0;
-    Serial.println("Initializing RXS");
-    BlinkPattern(ProgramState::RADIO_RXS_ATTEMPT_INIT);
-    iretn = init_radio(astrodev_rxs, hw_serial_rxs, baud_rate);
+    Serial.println("Initializing RX");
+    BlinkPattern(ProgramState::RADIO_RX_ATTEMPT_INIT);
+    iretn = init_radio(astrodev_rx, hw_serial_rx, baud_rate);
     if (iretn < 0)
     {
-        Serial.println("RXS Initialization failed");
-        BlinkPattern(ProgramState::RADIO_RXS_INIT_FAIL);
+        Serial.println("RX Initialization failed");
+        BlinkPattern(ProgramState::RADIO_RX_INIT_FAIL);
         BlinkPattern(ProgramState::INIT_FAIL);
         return iretn;
     }
-    Serial.println("RXS Initialization success");
-    BlinkPattern(ProgramState::RADIO_RXS_INIT_SUCCESS);
-    Serial.println("Initializing TXS");
-    BlinkPattern(ProgramState::RADIO_TXS_ATTEMPT_INIT);
-    iretn = init_radio(astrodev_txs, hw_serial_txs, baud_rate);
+    Serial.println("RX Initialization success");
+    BlinkPattern(ProgramState::RADIO_RX_INIT_SUCCESS);
+    Serial.println("Initializing TX");
+    BlinkPattern(ProgramState::RADIO_TX_ATTEMPT_INIT);
+    iretn = init_radio(astrodev_tx, hw_serial_tx, baud_rate);
     if (iretn < 0)
     {
-        Serial.println("TXS Initialization failed");
-        BlinkPattern(ProgramState::RADIO_TXS_INIT_FAIL);
+        Serial.println("TX Initialization failed");
+        BlinkPattern(ProgramState::RADIO_TX_INIT_FAIL);
         BlinkPattern(ProgramState::INIT_FAIL);
         return iretn;
     }
-    Serial.println("TXS Initialization success");
-    BlinkPattern(ProgramState::RADIO_TXS_INIT_SUCCESS);
-    Serial.println("RXS and TXS succesfully initialized!");
+    Serial.println("TX Initialization success");
+    BlinkPattern(ProgramState::RADIO_TX_INIT_SUCCESS);
+    Serial.println("RX and TX succesfully initialized!");
     BlinkPattern(ProgramState::INIT_SUCCESSFUL);
 
     return 0;

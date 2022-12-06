@@ -47,11 +47,11 @@ void setup()
 
     // TODO: determine more appropriate stack size
     // Start send/receive loops
-    // threads.addThread(shared., 0, RXS_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TXS_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::rxs_recv_loop, 0, RXS_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::txs_recv_loop, 0, RXS_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RXS_STACK_SIZE);
+    // threads.addThread(shared., 0, RX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
 
     Serial.println("Setup complete");
 

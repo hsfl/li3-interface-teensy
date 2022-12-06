@@ -16,13 +16,13 @@ namespace
     // Cosmos::Devices::Radios::Astrodev::frame response;
 }
 
-// TXS Loop
+// TX Loop
 void Cosmos::Module::Radio_interface::send_loop()
 {
-    Serial.println("txs_loop started");
+    Serial.println("tx_loop started");
     int32_t iretn = 0;
 
-    // TXS loop continually attempts to flush its outgoing packet queue
+    // TX loop continually attempts to flush its outgoing packet queue
     while(true)
     {
         // Send packet at front of queue
@@ -46,7 +46,7 @@ void Cosmos::Module::Radio_interface::send_loop()
         //     Serial.println(sentNum);
         //     Serial.print("Errors: ");
         //     Serial.println(errSend);
-        //     Serial.println("Returning from txs_loop");
+        //     Serial.println("Returning from tx_loop");
         //     return;
         // }
         // Cosmos::Support::PacketComm p;
@@ -71,10 +71,10 @@ void Cosmos::Module::Radio_interface::send_packet()
     // TODO: Attempt resend on NACK? Would be difficult to coordinate
     while(true)
     {
-        if (!shared.astrodev_txs.buffer_full.load())
+        if (!shared.astrodev_tx.buffer_full.load())
         {
             // Attempt transmit if transfer bull is not full
-            iretn = shared.astrodev_txs.Transmit(packet);
+            iretn = shared.astrodev_tx.Transmit(packet);
             Serial.print("Transmit iretn: ");
             Serial.println(iretn);
             if (iretn < 0)
@@ -95,12 +95,12 @@ void Cosmos::Module::Radio_interface::send_packet()
             // Wait until transfer buffer is not full
             threads.delay(100);
             // Let recv_loop handle getting the response back and clearing buffer_full flag
-            iretn = shared.astrodev_txs.Ping(false);
+            iretn = shared.astrodev_tx.Ping(false);
             if (iretn < 0)
             {
                 ++errSend;
             }
-            if (!shared.astrodev_txs.buffer_full.load())
+            if (!shared.astrodev_tx.buffer_full.load())
             {
                 Serial.println("buffer full flag cleared");
                 threads.delay(10);

@@ -3,11 +3,11 @@
 
 #define ASTRODEV_BAUD 9600
 
-#define RXS_PACKET_SIZE 250
-#define TXS_PACKET_SIZE 250
+#define RX_PACKET_SIZE 250
+#define TX_PACKET_SIZE 250
 
-#define RXS_STACK_SIZE 6000
-#define TXS_STACK_SIZE 6000
+#define RX_STACK_SIZE 6000
+#define TX_STACK_SIZE 6000
 
 #define READ_BUFFER_SIZE 512
 
@@ -16,7 +16,7 @@
 #define IOBC_NODE_ID 12
 
 // TODO: Change to actual radio num later
-#define LI3RXS 0
-#define LI3TXS 1
+#define LI3RX 0
+#define LI3TX 1
 
 #endif
