@@ -3,6 +3,7 @@
 #include "module/radio_recv.h"
 #include "module/radio_send.h"
 #include "module/iobc_recv.h"
+#include "helpers/TestBlinker.h"
 
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
@@ -31,6 +32,9 @@ void setup()
     // Wait for serial monitor
     Serial.println("Delay 4 sec");
     delay(4000);
+    // Serial.println("before print");
+    // Lithium3::BlinkPattern(Lithium3::ProgramState::INIT_SUCCESSFUL);
+    // Serial.println("after print");
 
     // Initialize the astrodev radio
     iretn = shared.init_radios(&Serial2, &Serial5, ASTRODEV_BAUD);

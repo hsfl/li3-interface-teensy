@@ -12,19 +12,19 @@ void Lithium3::BlinkPattern(Lithium3::ProgramState state)
     case Lithium3::ProgramState::RADIO_RXS_ATTEMPT_INIT:
         Blink(PULSE, PULSE);
         break;
-    // --- --- ---
+    // . . .
     case Lithium3::ProgramState::RADIO_RXS_INIT_SUCCESS:
     case Lithium3::ProgramState::RADIO_TXS_INIT_SUCCESS:
-        Blink(PULSE*3, PULSE);
-        Blink(PULSE*3, PULSE);
-        Blink(PULSE*3, PULSE);
+        Blink(PULSE, PULSE);
+        Blink(PULSE, PULSE);
+        Blink(PULSE, PULSE);
         break;
-    // . . .
+    // --- --- ---
     case Lithium3::ProgramState::RADIO_RXS_INIT_FAIL:
     case Lithium3::ProgramState::RADIO_TXS_INIT_FAIL:
-        Blink(PULSE, PULSE);
-        Blink(PULSE, PULSE);
-        Blink(PULSE, PULSE);
+        Blink(PULSE*3, PULSE);
+        Blink(PULSE*3, PULSE);
+        Blink(PULSE*3, PULSE);
         break;
     // . .
     case Lithium3::ProgramState::RADIO_TXS_ATTEMPT_INIT:
