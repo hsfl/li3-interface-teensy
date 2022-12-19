@@ -39,6 +39,7 @@ void Cosmos::Module::Radio_interface::send_loop()
 
         // Yield thread
         threads.delay(10);
+
         // ------- Stuff below here for debugging, remove later
         // if (sentNum > 128)
         // {

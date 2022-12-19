@@ -33,8 +33,16 @@ void setup()
     Serial.println("Delay 4 sec");
     delay(4000);
     // Serial.println("before print");
-    // Lithium3::BlinkPattern(Lithium3::ProgramState::INIT_SUCCESSFUL);
+    //Lithium3::BlinkPattern(Lithium3::ProgramState::INIT_SUCCESSFUL);
     // Serial.println("after print");
+
+    // BURN WIRE CODE DON'T TOUCH
+    // Must be HIGH for about 30 seconds
+    // Serial.println("Enabling burn wire");
+    // pinMode(12, OUTPUT);
+    // digitalWrite(12, HIGH);
+    // delay(30000);
+    // digitalWrite(12, LOW);
 
     // Initialize the astrodev radio
     iretn = shared.init_radios(&Serial2, &Serial5, ASTRODEV_BAUD);

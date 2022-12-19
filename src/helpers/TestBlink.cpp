@@ -31,20 +31,26 @@ void Lithium3::BlinkPattern(Lithium3::ProgramState state)
         Blink(PULSE, PULSE);
         Blink(PULSE, PULSE);
         break;
-    // . . . . . . . . . . .  forever
+    // . . . . . . . . . . .  for 5 seconds
     case Lithium3::ProgramState::INIT_SUCCESSFUL:
-        while (true)
         {
-            Blink(PULSE, PULSE);
+            elapsedMillis timeout;
+            while (timeout < 5000)
+            {
+                Blink(PULSE, PULSE);
+            }
         }
         break;
-    // ------------- flatline forever
+    // Flatline for 5 seconds
     case Lithium3::ProgramState::INIT_FAIL:
         // On
-        digitalWrite(LED_BUILTIN, HIGH);
-        while (true)
         {
-            threads.delay(1000);
+            elapsedMillis timeout;
+            digitalWrite(LED_BUILTIN, HIGH);
+            while (timeout < 5000)
+            {
+                threads.delay(1000);
+            }
         }
         break;
     default:

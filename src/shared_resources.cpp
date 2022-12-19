@@ -95,6 +95,23 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
         }
         threads.delay(5000);
     }
+    Serial.print("Checking config settings... ");
+    if (astrodev.tcv_configuration.interface_baud_rate != 0 ||
+    astrodev.tcv_configuration.power_amp_level != 220 ||
+    astrodev.tcv_configuration.rx_baud_rate != 1 ||
+    astrodev.tcv_configuration.tx_baud_rate != 1 ||
+    astrodev.tcv_configuration.ax25_preamble_length != 20||
+    astrodev.tcv_configuration.ax25_postamble_length != 20 ||
+    astrodev.tcv_configuration.rx_modulation != (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
+    astrodev.tcv_configuration.tx_modulation != (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
+    astrodev.tcv_configuration.tx_freq_high != 450000 / 65536 ||
+    astrodev.tcv_configuration.tx_freq_low != 450000 % 65536 ||
+    astrodev.tcv_configuration.rx_freq_high != 450000 / 65536 ||
+    astrodev.tcv_configuration.rx_freq_low != 450000 % 65536) {
+        Serial.println("config mismatch detected!");
+        return -1;
+    }
+    Serial.println("config check OK!");
     Serial.println("GetTCVConfig successful");
     return 0;
 }
