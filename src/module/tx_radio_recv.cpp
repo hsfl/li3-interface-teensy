@@ -67,6 +67,7 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
                 break;
 #else
             // These cases here are for faking a radio interaction
+            // Any 
             case Astrodev::Command::RESET:
             case Astrodev::Command::NOOP:
             case Astrodev::Command::SETTCVCONFIG:

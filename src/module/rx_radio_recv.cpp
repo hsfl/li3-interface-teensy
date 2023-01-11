@@ -45,6 +45,7 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
             // Though this does mean that I can't distinguish between acks and noacks
             case (Astrodev::Command)0:
                 continue;
+#ifndef MOCK_TESTING
             case Astrodev::Command::GETTCVCONFIG:
             case Astrodev::Command::TELEMETRY:
                 // Setup PacketComm packet stuff
@@ -65,6 +66,19 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
                     continue;
                 }
                 break;
+#else
+            // These cases here are for faking a radio interaction.
+            // These will be sent from the radio stack interface board's teensy.
+            // Any RECEIVE
+            case Astrodev::Command::RESET:
+            case Astrodev::Command::NOOP:
+            case Astrodev::Command::SETTCVCONFIG:
+            case Astrodev::Command::GETTCVCONFIG:
+                packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
+                packet.data.resize(1);
+                packet.data[0] = (uint8_t)cmd;
+                break;
+#endif
             default:
                 Serial.print("cmd ");
                 Serial.print((uint16_t)cmd);
