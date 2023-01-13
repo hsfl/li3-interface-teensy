@@ -61,12 +61,10 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
     astrodev.tcv_configuration.ax25_postamble_length = 20;
     // astrodev.tcv_configuration.config1;
     // astrodev.tcv_configuration.config2;
-    astrodev.tcv_configuration.rx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-    astrodev.tcv_configuration.tx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-    astrodev.tcv_configuration.tx_freq_high = 450000 / 65536;
-    astrodev.tcv_configuration.tx_freq_low = 450000 % 65536;
-    astrodev.tcv_configuration.rx_freq_high = 450000 / 65536;
-    astrodev.tcv_configuration.rx_freq_low = 450000 % 65536;
+    astrodev.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+    astrodev.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+    astrodev.tcv_configuration.tx_frequency = 400800;
+    astrodev.tcv_configuration.rx_frequency = 449900;
     memcpy(astrodev.tcv_configuration.ax25_source, "SOURCE", 6);
     memcpy(astrodev.tcv_configuration.ax25_destination, "DESTIN", 6);
 
@@ -102,12 +100,10 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
     astrodev.tcv_configuration.tx_baud_rate != 1 ||
     astrodev.tcv_configuration.ax25_preamble_length != 20||
     astrodev.tcv_configuration.ax25_postamble_length != 20 ||
-    astrodev.tcv_configuration.rx_modulation != (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
-    astrodev.tcv_configuration.tx_modulation != (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
-    astrodev.tcv_configuration.tx_freq_high != 450000 / 65536 ||
-    astrodev.tcv_configuration.tx_freq_low != 450000 % 65536 ||
-    astrodev.tcv_configuration.rx_freq_high != 450000 / 65536 ||
-    astrodev.tcv_configuration.rx_freq_low != 450000 % 65536) {
+    astrodev.tcv_configuration.rx_modulation != Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
+    astrodev.tcv_configuration.tx_modulation != Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
+    astrodev.tcv_configuration.tx_frequency != 400800 ||
+    astrodev.tcv_configuration.rx_frequency != 449900) {
         Serial.println("config mismatch detected!");
         return -1;
     }

@@ -154,12 +154,10 @@ void fake_radio_response_creator(Astrodev::Command cmd)
             shared.astrodev_tx.tcv_configuration.tx_baud_rate = 1;
             shared.astrodev_tx.tcv_configuration.ax25_preamble_length = 20;
             shared.astrodev_tx.tcv_configuration.ax25_postamble_length = 20;
-            shared.astrodev_tx.tcv_configuration.rx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-            shared.astrodev_tx.tcv_configuration.tx_modulation = (uint8_t)Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-            shared.astrodev_tx.tcv_configuration.tx_freq_high = 450000 / 65536;
-            shared.astrodev_tx.tcv_configuration.tx_freq_low = 450000 % 65536;
-            shared.astrodev_tx.tcv_configuration.rx_freq_high = 450000 / 65536;
-            shared.astrodev_tx.tcv_configuration.rx_freq_low = 450000 % 65536;
+            shared.astrodev_tx.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+            shared.astrodev_tx.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+            shared.astrodev_tx.tcv_configuration.tx_frequency = 400800;
+            shared.astrodev_tx.tcv_configuration.rx_frequency = 449900;
             memcpy(shared.astrodev_tx.tcv_configuration.ax25_source, "SOURCE", 6);
             memcpy(shared.astrodev_tx.tcv_configuration.ax25_destination, "DESTIN", 6);
             memcpy(&message.payload[0], &shared.astrodev_tx.tcv_configuration, sizeof(shared.astrodev_tx.tcv_configuration));
