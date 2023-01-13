@@ -126,7 +126,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
     {
     case Astrodev::Command::NOOP:
         {
-            message.header.command = (uint8_t)Astrodev::Command::NOOP;
+            message.header.command = Astrodev::Command::NOOP;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
             fake_transmit(message, 0);
@@ -137,7 +137,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
             // Stop sending packets on reset
             initialized = false;
 
-            message.header.command = (uint8_t)Astrodev::Command::RESET;
+            message.header.command = Astrodev::Command::RESET;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
             fake_transmit(message, 0);
@@ -145,7 +145,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
         break;
     case Astrodev::Command::GETTCVCONFIG:
         {
-            message.header.command = (uint8_t)Astrodev::Command::GETTCVCONFIG;
+            message.header.command = Astrodev::Command::GETTCVCONFIG;
             message.header.sizehi = 0;
             message.header.sizelo = sizeof(shared.astrodev_tx.tcv_configuration);
             shared.astrodev_tx.tcv_configuration.interface_baud_rate = 0;
@@ -170,7 +170,7 @@ void fake_radio_response_creator(Astrodev::Command cmd)
         break;
     case Astrodev::Command::SETTCVCONFIG:
         {
-            message.header.command = (uint8_t)Astrodev::Command::SETTCVCONFIG;
+            message.header.command = Astrodev::Command::SETTCVCONFIG;
             message.header.sizehi = 0x0a;
             message.header.sizelo = 0x0a;
             fake_transmit(message, 0);
@@ -231,7 +231,7 @@ int32_t fake_transmit(Cosmos::Support::PacketComm &packet)
     }
 
     // Other side will receive it, so this is RECEIVE type
-    tmessage.header.command = (uint8_t)Astrodev::Command::RECEIVE;
+    tmessage.header.command = Astrodev::Command::RECEIVE;
     tmessage.header.sizelo = packet.wrapped.size();
     tmessage.header.sizehi = 0;
     if (tmessage.header.sizelo > Astrodev::MTU)

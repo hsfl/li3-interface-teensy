@@ -26,7 +26,7 @@ namespace Cosmos {
                 std::map<uint8_t, uint16_t> UART_BAUD = {{0, 9600}, {1, 19200}, {2, 38400}, {3, 57600}, {4, 115200}};
                 std::map<uint16_t, uint8_t> UART_INDEX = {{9600, 0}, {19200, 1}, {38400, 2}, {57600, 3}, {115200, 4}};
 
-                enum class Command
+                enum class Command : uint8_t
                 {
                     NAK = 0x00,
                     NOOP = 0x01,
@@ -194,7 +194,7 @@ namespace Cosmos {
                             uint8_t sync0;
                             uint8_t sync1;
                             uint8_t type;
-                            uint8_t command;
+                            Command command;
                             union
                             {
                                 response status;

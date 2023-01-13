@@ -133,7 +133,7 @@ namespace Cosmos {
                     return iretn;
                 }
 
-                tmessage.header.command = (uint8_t)Command::TRANSMIT;
+                tmessage.header.command = Command::TRANSMIT;
                 tmessage.header.sizelo = packet.wrapped.size();
                 if (tmessage.header.sizelo > MTU)
                 {
@@ -155,7 +155,7 @@ namespace Cosmos {
                 int32_t iretn;
                 frame message;
 
-                message.header.command = (uint8_t)Command::NOOP;
+                message.header.command = Command::NOOP;
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
@@ -197,7 +197,7 @@ namespace Cosmos {
                 int32_t iretn;
                 frame message;
 
-                message.header.command = (uint8_t)Command::RESET;
+                message.header.command = Command::RESET;
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
@@ -236,7 +236,7 @@ namespace Cosmos {
                 int32_t iretn;
                 frame message;
 
-                message.header.command = (uint8_t)Command::GETTCVCONFIG;
+                message.header.command = Command::GETTCVCONFIG;
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
@@ -277,7 +277,7 @@ namespace Cosmos {
                 int32_t iretn;
                 frame message;
 
-                message.header.command = (uint8_t)Command::SETTCVCONFIG;
+                message.header.command = Command::SETTCVCONFIG;
                 message.header.sizehi = 0;
                 message.header.sizelo = sizeof(tcv_configuration);
                 message.tcv = tcv_configuration;
@@ -315,7 +315,7 @@ namespace Cosmos {
                 int32_t iretn;
                 frame message;
 
-                message.header.command = (uint8_t)Command::TELEMETRY;
+                message.header.command = Command::TELEMETRY;
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
@@ -336,7 +336,7 @@ namespace Cosmos {
                 int32_t iretn;
                 frame message;
 
-                message.header.command = (uint8_t)Command::RFCONFIG;
+                message.header.command = Command::RFCONFIG;
                 message.header.sizehi = 0;
                 message.header.sizelo = sizeof(rf_config);
                 message.rf = config;
@@ -414,7 +414,7 @@ namespace Cosmos {
 
 #ifdef DEBUG_PRINT
                 Serial.print("header.command: ");
-                Serial.println(message.header.command);
+                Serial.println(unsigned(message.header.command));
 #endif
 
                 // Check payload bytes
@@ -458,7 +458,7 @@ namespace Cosmos {
                 uint8_t size = message.header.sizelo;
                 if (!size)
                 {
-                    return message.header.command;
+                    return (int32_t)message.header.command;
                 }
                 // Read rest of payload bytes
                 size_t sizeToRead = size+2;
@@ -509,149 +509,8 @@ namespace Cosmos {
 #endif
                 // Handle command types outside of astrodev library
                 // i.e., pushing payloads to appropriate queues and what not
-                return message.header.command;
+                return (int32_t)message.header.command;
             }
-
-            // void Astrodev::receive_loop()
-            // {
-            //     running = true;
-            //     elapsedMillis wdt;
-
-            //     last_error = 0;
-            //     while(running)
-            //     {
-            //         int32_t ch;
-            //         frame next_frame;
-            //         last_error = 0;
-            //         while (wdt < 5000)
-            //         {
-            //             // Wait for first sync character
-            //             do
-            //             {
-            //                 ch = serial->read();
-            //                 if (ch < 0)
-            //                 {
-            //                     last_error = ASTRODEV_ERROR_SYNC0;
-            //                     break;
-            //                 }
-            //             } while (ch != SYNC0);
-            //             next_message.preamble[0] = ch;
-            //             wdt = 0;
-
-            //             // Second sync character must immediately follow
-            //             ch = serial->read();
-            //             if (ch < 0 || ch != SYNC1)
-            //             {
-            //                 last_error = ASTRODEV_ERROR_SYNC1;
-            //                 break;
-            //             }
-            //             next_message.preamble[1] = ch;
-            //             wdt = 0;
-
-            //             // Read rest of header
-            //             for (uint16_t i=2; i<8; ++i)
-            //             {
-            //                 ch = serial->read();
-            //                 if (ch < 0)
-            //                 {
-            //                     last_error = ASTRODEV_ERROR_HEADER;
-            //                     break;
-            //                 }
-            //                 next_message.preamble[i] = ch;
-            //             }
-            //             if (last_error < 0)
-            //             {
-            //                 break;
-            //             }
-            //             wdt = 0;
-
-            //             // Check header for accuracy
-            //             union
-            //             {
-            //                 uint16_t cs;
-            //                 uint8_t csb[2];
-            //             };
-            //             cs = CalcCS(&next_message.preamble[2], 4);
-            //             if (cs != next_message.header.cs)
-            //             {
-            //                 last_error = ASTRODEV_ERROR_HEADER_CS;
-            //                 break;
-            //             }
-            //             wdt = 0;
-
-            //             // Check for NOACK
-            //             if (next_message.header.ack == 0x0a && next_message.header.size == 0x0a)
-            //             {
-            //                 last_ack = true;
-            //                 last_command = (Command)next_message.header.command;
-            //                 wdt = 0;
-            //             }
-            //             else if (next_message.header.ack == 0x0f && next_message.header.size == 0xff)
-            //             {
-            //                 last_ack = false;
-            //                 last_command = (Command)next_message.header.command;
-            //                 wdt = 0;
-            //             }
-            //             else
-            //             {
-            //                 // Read rest of frame
-            //                 switch ((Command)next_message.header.command)
-            //                 {
-            //                 // Simple ACK:NOACK
-            //                 case Command::NOOP:
-            //                 case Command::RESET:
-            //                 case Command::TRANSMIT:
-            //                 case Command::SETTCVCONFIG:
-            //                 case Command::FLASH:
-            //                 case Command::RFCONFIG:
-            //                 case Command::BEACONDATA:
-            //                 case Command::BEACONCONFIG:
-            //                 case Command::DIOKEY:
-            //                 case Command::FIRMWAREUPDATE:
-            //                 case Command::FIRMWAREPACKET:
-            //                 case Command::FASTSETPA:
-            //                     break;
-            //                 default:
-            //                     {
-            //                         for (uint16_t i=0; i<next_message.header.size+2; ++i)
-            //                         {
-            //                             if((ch = serial->read()) < 0)
-            //                             {
-            //                                 //                                        serial->drain();
-            //                                 last_error = ASTRODEV_ERROR_PAYLOAD;
-            //                                 break;
-            //                             }
-            //                             next_frame.payload[i] = ch;
-            //                         }
-            //                         if (last_error < 0)
-            //                         {
-            //                             break;
-            //                         }
-
-            //                         // Check payload for accuracy
-            //                         cs = next_frame.payload[next_message.header.size] | (next_frame.payload[next_message.header.size+1] << 8L);
-            //                         if (cs != CalcCS(&next_message.preamble[2], 6+next_message.header.size))
-            //                         {
-            //                             last_error = ASTRODEV_ERROR_PAYLOAD_CS;
-            //                             break;
-            //                         }
-            //                     }
-            //                     break;
-            //                 }
-            //                 if (next_message.header.command == (uint8_t)Command::TELEMETRY)
-            //                 {
-            //                     last_telem = next_frame.telem;
-            //                 }
-            //                 else if (next_message.header.command == (uint8_t)Command::RECEIVE)
-            //                 {
-            //                     vector<uint8_t> payload;
-            //                     payload.insert(payload.begin(), (uint8_t *)next_frame.payload, (uint8_t *)next_frame.payload+next_message.header.size);
-            //                     push_queue_in(payload);
-            //                 }
-            //             }
-            //         }
-            //     }
-            // }
 
             void Astrodev::setSerial(HardwareSerial* new_serial)
             {
