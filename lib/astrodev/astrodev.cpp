@@ -434,7 +434,8 @@ namespace Cosmos {
                     }
 #endif
                     last_ack = true;
-                    return 0;
+                    // TODO: check this doesn't catch any strange stuff
+                    return (int32_t)message.header.command;
                 }
                 else if (message.header.status.ack == 0x0f && message.header.sizelo == 0xff)
                 {

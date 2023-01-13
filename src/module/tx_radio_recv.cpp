@@ -17,7 +17,7 @@ namespace
 void Cosmos::Module::Radio_interface::tx_recv_loop()
 {
     // int32_t iretn;
-    packet.header.dest = 0;
+    packet.header.nodedest = 0;
     Serial.println("tx_recv_loop started");
     
     while (true)
@@ -33,8 +33,8 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
         else
         {
             //packet.header.radio = ...; // TODO: Don't know atm
-            packet.header.dest = IOBC_NODE_ID;
-            packet.header.orig = GROUND_NODE_ID;
+            packet.header.nodedest = IOBC_NODE_ID;
+            packet.header.nodeorig = GROUND_NODE_ID;
 
             // Handle payload
             Astrodev::Command cmd = (Astrodev::Command)iretn;

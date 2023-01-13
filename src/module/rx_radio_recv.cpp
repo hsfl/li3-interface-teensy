@@ -17,7 +17,7 @@ namespace
 void Cosmos::Module::Radio_interface::rx_recv_loop()
 {
     // int32_t iretn;
-    packet.header.dest = 0;
+    packet.header.nodedest = 0;
     Serial.println("rx_recv_loop started");
     
     while (true)
@@ -34,8 +34,8 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
         {
             //packet.header.radio = ...; // TODO: Don't know atm
 
-            packet.header.dest = IOBC_NODE_ID;
-            packet.header.orig = GROUND_NODE_ID;
+            packet.header.nodedest = IOBC_NODE_ID;
+            packet.header.nodeorig = GROUND_NODE_ID;
 
             // Handle payload
             Astrodev::Command cmd = (Astrodev::Command)iretn;
@@ -46,10 +46,11 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
             case (Astrodev::Command)0:
                 continue;
 #ifndef MOCK_TESTING
+            case Astrodev::Command::NOOP:
             case Astrodev::Command::GETTCVCONFIG:
             case Astrodev::Command::TELEMETRY:
                 // Setup PacketComm packet stuff
-                packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
+                packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
                 packet.data.resize(incoming_message.header.sizelo + 1);
                 packet.data[0] = (uint8_t)cmd;
                 memcpy(packet.data.data()+1, &incoming_message.payload[0], incoming_message.header.sizelo);

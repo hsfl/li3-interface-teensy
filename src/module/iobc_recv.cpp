@@ -14,7 +14,7 @@ namespace
 // Listens for SLIP packets from the iobc and forwards them to the main queue to be handled
 void Cosmos::Module::Radio_interface::iobc_recv_loop()
 {
-    packet.header.dest = 0;
+    packet.header.nodedest = 0;
     Serial.println("iobc_recv_loop started");
     
     while (true)
@@ -53,7 +53,7 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
             continue;
         }
         // Forward to appropriate queue
-        switch(packet.header.dest)
+        switch(packet.header.nodedest)
         {
         case GROUND_NODE_ID:
             Serial.println("To ground");

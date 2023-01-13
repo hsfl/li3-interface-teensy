@@ -36,9 +36,10 @@ void setup()
 void send_get_telem_packet()
 {
     packet.header.type = PacketComm::TypeId::CommandRadioCommunicate;
-    packet.header.orig = IOBC_NODE_ID;
-    packet.header.dest = IOBC_NODE_ID;
-    packet.header.radio = 0;
+    packet.header.nodeorig = IOBC_NODE_ID;
+    packet.header.nodedest = IOBC_NODE_ID;
+    packet.header.chandest = 0;
+    packet.header.chanorig = 0;
     packet.data.resize(4);
     // Get rx telem
     packet.data[0] = LI3RX;
@@ -77,9 +78,10 @@ void send_get_telem_packet()
 void send_test_transmit_packet()
 {
     packet.header.type = PacketComm::TypeId::CommandPing;
-    packet.header.orig = IOBC_NODE_ID;
-    packet.header.dest = GROUND_NODE_ID;
-    packet.header.radio = 0;
+    packet.header.nodeorig = IOBC_NODE_ID;
+    packet.header.nodedest = GROUND_NODE_ID;
+    packet.header.chandest = 0;
+    packet.header.chanorig = 0;
     const size_t REPEAT = 124;
     // ascend from 0 to REPEAT-1, then last 4 bytes is packet number
     packet.data.resize(REPEAT + sizeof(send_counter));
