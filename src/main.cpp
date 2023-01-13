@@ -96,9 +96,24 @@ void handle_main_queue_packets()
         using namespace Cosmos::Support;
         switch(packet.header.type)
         {
-        case PacketComm::TypeId::CommandRadioCommunicate:
+        case PacketComm::TypeId::CommandRadioAstrodevCommunicate:
             {
-                Lithium3::RadioCommand(packet);
+                // These are our periodic telem grabbing responses, send to iobc
+                if (packet.header.nodeorig == IOBC_NODE_ID)
+                {
+                    Serial.print("Got radio communicate response type:");
+                    Serial.print(packet.data[2]);
+                    Serial.println(", forwarding to iobc");
+                    packet.Wrap();
+                    shared.SLIPIobcSerial.beginPacket();
+                    shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
+                    shared.SLIPIobcSerial.endPacket();
+                }
+                // If the packet command came from ground, execute
+                else if (packet.header.nodeorig == GROUND_NODE_ID)
+                {
+                    Lithium3::RadioCommand(packet);
+                }
             }
             break;
         case PacketComm::TypeId::DataRadioResponse:
@@ -109,7 +124,9 @@ void handle_main_queue_packets()
             break;
         default:
             {
-                Serial.println("Packet type not handled, forwarding to iobc");
+                Serial.print("Packet type ");
+                Serial.print((uint16_t)packet.header.type);
+                Serial.println(" not handled, forwarding to iobc");
                 packet.Wrap();
                 shared.SLIPIobcSerial.beginPacket();
                 shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());

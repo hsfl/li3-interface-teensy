@@ -35,7 +35,7 @@ void setup()
 
 void send_get_telem_packet()
 {
-    packet.header.type = PacketComm::TypeId::CommandRadioCommunicate;
+    packet.header.type = PacketComm::TypeId::CommandRadioAstrodevCommunicate;
     packet.header.nodeorig = IOBC_NODE_ID;
     packet.header.nodedest = IOBC_NODE_ID;
     packet.header.chandest = 0;

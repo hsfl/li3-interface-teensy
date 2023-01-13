@@ -54,7 +54,7 @@ namespace Cosmos {
                     ALARM_RTC = 0x42,
                 };
 
-                enum class Modulation
+                enum class Modulation : uint8_t
                 {
                     ASTRODEV_MODULATION_GFSK,
                     ASTRODEV_MODULATION_AFSK,
@@ -133,7 +133,6 @@ namespace Cosmos {
                     uint16_t ax25_postamble_length;
                     function_config1 config1;
                     function_config2 config2;
-	                uint16_t cs;
                 };
 
                 struct __attribute__((packed)) rf_config

@@ -95,7 +95,7 @@ void handle_main_queue_packets()
                 Serial.println("Pong!");
             }
             break;
-        case PacketComm::TypeId::CommandRadioCommunicate:
+        case PacketComm::TypeId::CommandRadioAstrodevCommunicate:
             {
                 
             }

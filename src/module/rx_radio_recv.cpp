@@ -51,9 +51,14 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
             case Astrodev::Command::TELEMETRY:
                 // Setup PacketComm packet stuff
                 packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
-                packet.data.resize(incoming_message.header.sizelo + 1);
-                packet.data[0] = (uint8_t)cmd;
-                memcpy(packet.data.data()+1, &incoming_message.payload[0], incoming_message.header.sizelo);
+                packet.header.nodeorig = IOBC_NODE_ID;
+                packet.header.nodedest = IOBC_NODE_ID;
+                packet.data.resize(incoming_message.header.sizelo + 4);
+                packet.data[0] = LI3RX;
+                packet.data[1] = 0x20;
+                packet.data[2] = (uint8_t)cmd;
+                packet.data[3] = incoming_message.header.sizelo;
+                memcpy(packet.data.data()+4, &incoming_message.payload[0], incoming_message.header.sizelo);
                 break;
             case Astrodev::Command::RECEIVE:
                 // Packets from the ground will be in PacketComm protocol
