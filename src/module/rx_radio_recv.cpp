@@ -63,8 +63,8 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
                 // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
                 Serial.print("in rx receive, bytes:");
                 Serial.println(incoming_message.header.sizelo);
-                packet.wrapped.resize(incoming_message.header.sizelo);
-                memcpy(packet.wrapped.data(), &incoming_message.payload[0], incoming_message.header.sizelo);
+                packet.wrapped.resize(incoming_message.header.sizelo-18);
+                memcpy(packet.wrapped.data(), &incoming_message.payload[16], incoming_message.header.sizelo-18);
                 iretn = packet.Unwrap();
                 if (iretn < 0)
                 {

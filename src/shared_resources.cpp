@@ -18,7 +18,7 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSeri
     int32_t iretn = 0;
     Serial.println("Initializing RX");
     BlinkPattern(ProgramState::RADIO_RX_ATTEMPT_INIT);
-    iretn = init_radio(astrodev_rx, hw_serial_rx, baud_rate);
+    iretn = init_radio(astrodev_rx, hw_serial_rx, baud_rate, 449900, 449900);
     if (iretn < 0)
     {
         Serial.println("RX Initialization failed");
@@ -30,7 +30,7 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSeri
     BlinkPattern(ProgramState::RADIO_RX_INIT_SUCCESS);
     Serial.println("Initializing TX");
     BlinkPattern(ProgramState::RADIO_TX_ATTEMPT_INIT);
-    iretn = init_radio(astrodev_tx, hw_serial_tx, baud_rate);
+    iretn = init_radio(astrodev_tx, hw_serial_tx, baud_rate, 400800, 400800);
     if (iretn < 0)
     {
         Serial.println("TX Initialization failed");
@@ -46,7 +46,7 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSeri
     return 0;
 }
 
-int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev, HardwareSerial* hw_serial, uint32_t baud_rate)
+int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev, HardwareSerial* hw_serial, uint32_t baud_rate, uint32_t tx_freq, uint32_t rx_freq)
 {
     int32_t iretn = astrodev.Init(hw_serial, baud_rate);
     if (iretn < 0)
@@ -64,8 +64,8 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
     // astrodev.tcv_configuration.config2;
     astrodev.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
     astrodev.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-    astrodev.tcv_configuration.tx_frequency = 400800;
-    astrodev.tcv_configuration.rx_frequency = 449900;
+    astrodev.tcv_configuration.tx_frequency = tx_freq;
+    astrodev.tcv_configuration.rx_frequency = rx_freq;
     memcpy(astrodev.tcv_configuration.ax25_source, "SOURCE", 6);
     memcpy(astrodev.tcv_configuration.ax25_destination, "DESTIN", 6);
 
@@ -103,8 +103,8 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
     astrodev.tcv_configuration.ax25_postamble_length != 20 ||
     astrodev.tcv_configuration.rx_modulation != Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
     astrodev.tcv_configuration.tx_modulation != Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
-    astrodev.tcv_configuration.tx_frequency != 400800 ||
-    astrodev.tcv_configuration.rx_frequency != 449900) {
+    astrodev.tcv_configuration.tx_frequency != tx_freq ||
+    astrodev.tcv_configuration.rx_frequency != rx_freq) {
         Serial.println("config mismatch detected!");
         return -1;
     }
