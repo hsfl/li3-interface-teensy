@@ -34,8 +34,6 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
         {
             //packet.header.radio = ...; // TODO: Don't know atm
 
-            packet.header.nodedest = IOBC_NODE_ID;
-            packet.header.nodeorig = GROUND_NODE_ID;
 
             // Handle payload
             Astrodev::Command cmd = (Astrodev::Command)iretn;
@@ -63,12 +61,14 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
             case Astrodev::Command::RECEIVE:
                 // Packets from the ground will be in PacketComm protocol
                 // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
-                Serial.println("in receive");
+                Serial.print("in rx receive, bytes:");
+                Serial.println(incoming_message.header.sizelo);
                 packet.wrapped.resize(incoming_message.header.sizelo);
                 memcpy(packet.wrapped.data(), &incoming_message.payload[0], incoming_message.header.sizelo);
                 iretn = packet.Unwrap();
                 if (iretn < 0)
                 {
+                    Serial.println("Unwrap fail in RX radio recv");
                     continue;
                 }
                 break;

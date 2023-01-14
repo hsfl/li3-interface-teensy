@@ -101,10 +101,16 @@ void handle_main_queue_packets()
                 // These are our periodic telem grabbing responses, send to iobc
                 if (packet.header.nodeorig == IOBC_NODE_ID)
                 {
-                    Serial.print("Got radio communicate response type:");
+                    Serial.print("Got radio communicate response unit:");
+                    Serial.print(packet.data[0]);
+                    Serial.print(" type:");
                     Serial.print(packet.data[2]);
                     Serial.println(", forwarding to iobc");
-                    packet.Wrap();
+                    iretn = packet.Wrap();
+                    if (iretn < 0)
+                    {
+                        Serial.println("Error in Wrap()");
+                    }
                     shared.SLIPIobcSerial.beginPacket();
                     shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
                     shared.SLIPIobcSerial.endPacket();
@@ -127,7 +133,11 @@ void handle_main_queue_packets()
                 Serial.print("Packet type ");
                 Serial.print((uint16_t)packet.header.type);
                 Serial.println(" not handled, forwarding to iobc");
-                packet.Wrap();
+                iretn = packet.Wrap();
+                if (iretn < 0)
+                {
+                    Serial.println("Error in Wrap()");
+                }
                 shared.SLIPIobcSerial.beginPacket();
                 shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
                 shared.SLIPIobcSerial.endPacket();

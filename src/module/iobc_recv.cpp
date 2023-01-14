@@ -46,7 +46,7 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         }
         threads.yield();
         // Since this is an intermediate step, don't bother with crc check
-        iretn = packet.Unwrap(false);
+        iretn = packet.Unwrap(true);
         if (iretn < 0)
         {
             Serial.println("Unwrap error");
@@ -61,6 +61,8 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
             break;
         case IOBC_NODE_ID:
             Serial.println("To me");
+            Serial.print("Packet header type:");
+            Serial.println((uint16_t)packet.header.type);
             shared.push_queue(shared.main_queue, shared.main_lock, packet);
             break;
         default:

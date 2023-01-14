@@ -59,15 +59,20 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
                 packet.data[3] = incoming_message.header.sizelo;
                 memcpy(packet.data.data()+4, &incoming_message.payload[0], incoming_message.header.sizelo);
                 break;
+            case Astrodev::Command::TRANSMIT:
+                    // Transmit ACK
+                    continue;
+                break;
             case Astrodev::Command::RECEIVE:
                 // Packets from the ground will be in PacketComm protocol
                 // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
-                Serial.println("in receive");
-                packet.wrapped.resize(incoming_message.header.sizelo);
+                Serial.print("in tx receive, bytes:");
+                Serial.println(incoming_message.header.sizelo);
                 memcpy(packet.wrapped.data(), &incoming_message.payload[0], incoming_message.header.sizelo);
                 iretn = packet.Unwrap();
                 if (iretn < 0)
                 {
+                    Serial.println("Unwrap fail in TX radio recv");
                     continue;
                 }
                 break;

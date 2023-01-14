@@ -6,7 +6,8 @@ static uint8_t READ_BUFFER[READ_BUFFER_SIZE];
 shared_resources::shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwserial), SLIPIobcSerial(hwserial)
 {
     IobcSerial->addMemoryForRead(&READ_BUFFER, READ_BUFFER_SIZE);
-    SLIPIobcSerial.begin(115200);
+    SLIPIobcSerial.begin(9600);
+    SLIPIobcSerial.println("Serial Begin");
     IobcSerial->clear();
     SLIPIobcSerial.flush();
 }
