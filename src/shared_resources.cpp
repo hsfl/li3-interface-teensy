@@ -55,7 +55,7 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
         return -1;
     }
     astrodev.tcv_configuration.interface_baud_rate = 0;
-    astrodev.tcv_configuration.power_amp_level = 220;
+    astrodev.tcv_configuration.power_amp_level = 127;
     astrodev.tcv_configuration.rx_baud_rate = 1;
     astrodev.tcv_configuration.tx_baud_rate = 1;
     astrodev.tcv_configuration.ax25_preamble_length = 20;
@@ -96,7 +96,7 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
     }
     Serial.print("Checking config settings... ");
     if (astrodev.tcv_configuration.interface_baud_rate != 0 ||
-    astrodev.tcv_configuration.power_amp_level != 220 ||
+    astrodev.tcv_configuration.power_amp_level != 127 ||
     astrodev.tcv_configuration.rx_baud_rate != 1 ||
     astrodev.tcv_configuration.tx_baud_rate != 1 ||
     astrodev.tcv_configuration.ax25_preamble_length != 20||
