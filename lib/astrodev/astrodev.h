@@ -219,7 +219,6 @@ namespace Cosmos {
 
                 telemetry last_telem;
                 int32_t last_error = 0;
-                bool last_ack = false;
                 std::atomic<bool> buffer_full;
                 Command last_command = Command::NAK;
                 tcv_config tcv_configuration;
@@ -234,9 +233,7 @@ namespace Cosmos {
                 Astrodev();
                 Astrodev(HardwareSerial* hw_serial);
                 int32_t Init(HardwareSerial* hw_serial, uint32_t baud_rate=38400);
-                // void Join();
-                // int32_t Packetize(PacketComm& packet);
-                // int32_t UnPacketize(PacketComm& packet);
+                int32_t Connect();
                 int32_t Ping();
                 int32_t Ping(bool get_response);
                 int32_t Reset();
@@ -255,6 +252,9 @@ namespace Cosmos {
 
                 // For debugging purposes
                 void setSerial(HardwareSerial* new_serial);
+
+                // ACKs
+                std::atomic<bool> ack_transmit;
 
             private:
                 HardwareSerial *serial;

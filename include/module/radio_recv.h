@@ -13,6 +13,9 @@ namespace Cosmos
             void rx_recv_loop();
             //! Listens for responses from the TX radio
             void tx_recv_loop();
+
+            //! Handle packets received from RX radio
+            void handle_rx_recv(const Cosmos::Devices::Radios::Astrodev::frame& msg);
         }
     }
 };

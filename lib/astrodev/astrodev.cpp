@@ -17,14 +17,19 @@ namespace Cosmos {
 
             int32_t Astrodev::Init(HardwareSerial* hw_serial, uint32_t baud_rate)
             {
-                int32_t iretn = 0;
-                int32_t retries = 5;
                 serial = hw_serial;
                 serial->begin(baud_rate);
                 serial->clear();
                 serial->flush();
 
-                Serial.println("Resetting radio...");
+                return 0;
+            }
+
+            int32_t Astrodev::Connect()
+            {
+                int32_t iretn = 0;
+                int32_t retries = 5;
+                Serial.println("Connecting to radio, resetting...");
                 do
                 {
                     iretn = Reset();
@@ -52,7 +57,6 @@ namespace Cosmos {
                 Serial.println("Astrodev radio Init success.");
 
                 return 0;
-
             }
 
             int32_t Astrodev::Transmit(frame &message)
@@ -62,6 +66,17 @@ namespace Cosmos {
                 if (message.header.sizelo > MTU)
                 {
                     return GENERAL_ERROR_BAD_SIZE;
+                }
+
+                switch (message.header.command)
+                {
+                case Command::TRANSMIT:
+                    {
+                        ack_transmit = false;
+                    }
+                    break;
+                default:
+                    break;
                 }
                 
                 message.header.sync0 = SYNC0;
@@ -433,7 +448,16 @@ namespace Cosmos {
                         Serial.println("BUFFER OK!!!!!!!!!!!!!!!!!!!!!!!!!");
                     }
 #endif
-                    last_ack = true;
+                    switch (message.header.command)
+                    {
+                    case Command::TRANSMIT:
+                        {
+                            ack_transmit = true;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
                     // TODO: check this doesn't catch any strange stuff
                     return (int32_t)message.header.command;
                 }
@@ -449,7 +473,16 @@ namespace Cosmos {
                         Serial.println("BUFFER OK##############################");
                     }
 #endif
-                    last_ack = false;
+                    switch (message.header.command)
+                    {
+                    case Command::TRANSMIT:
+                        {
+                            ack_transmit = false;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
                     return ASTRODEV_ERROR_NACK;
                 }
 

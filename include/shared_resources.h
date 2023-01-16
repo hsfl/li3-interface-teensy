@@ -29,6 +29,7 @@ public:
     Cosmos::Devices::Radios::Astrodev astrodev_tx;
     //! Initializes RX and TX Astrodev radios
     int32_t init_radios(HardwareSerial* hw_serial_rx, HardwareSerial* hw_serial_tx, uint32_t baud_rate);
+    int32_t connect_radio(Cosmos::Devices::Radios::Astrodev& astrodev, uint32_t tx_freq, uint32_t rx_freq);
 
     // See if these can't be replaced by 2D arrays
     std::deque<Cosmos::Support::PacketComm> send_queue;

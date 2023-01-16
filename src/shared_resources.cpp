@@ -54,14 +54,24 @@ int32_t shared_resources::init_radio(Cosmos::Devices::Radios::Astrodev &astrodev
         Serial.println("Error initializing Astrodev radio. Exiting...");
         return -1;
     }
+
+    return connect_radio(astrodev, tx_freq, rx_freq);
+}
+
+int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astrodev, uint32_t tx_freq, uint32_t rx_freq)
+{
+    int32_t iretn = astrodev.Connect();
+    if (iretn < 0)
+    {
+        Serial.println("Error connecting to Astrodev radio.");
+        return -1;
+    }
     astrodev.tcv_configuration.interface_baud_rate = 0;
     astrodev.tcv_configuration.power_amp_level = 127;
     astrodev.tcv_configuration.rx_baud_rate = 1;
     astrodev.tcv_configuration.tx_baud_rate = 1;
     astrodev.tcv_configuration.ax25_preamble_length = 20;
     astrodev.tcv_configuration.ax25_postamble_length = 20;
-    // astrodev.tcv_configuration.config1;
-    // astrodev.tcv_configuration.config2;
     astrodev.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
     astrodev.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
     astrodev.tcv_configuration.tx_frequency = tx_freq;

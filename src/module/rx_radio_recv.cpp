@@ -12,6 +12,11 @@ namespace
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
+    elapsedMillis last_connected;
+    elapsedMillis telem_timer;
+
+    // If it has been more than 30 seconds since last 
+    const unsigned long unconnected_timeout = 30 * 1000;
 }
 
 void Cosmos::Module::Radio_interface::rx_recv_loop()
@@ -19,84 +24,106 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
     // int32_t iretn;
     packet.header.nodedest = 0;
     Serial.println("rx_recv_loop started");
-    
-    while (true)
+    while(true)
     {
         threads.delay(10);
 
+        //Receive
         iretn = shared.astrodev_rx.Receive(incoming_message);
-        if (iretn < 0)
+        if (iretn >= 0)
         {
-            // Yield until successful read
+            last_connected = 0;
+            Radio_interface::handle_rx_recv(incoming_message);
+        }
+
+        // Grab Telemetry every 10 seconds, and check if we are still connected
+        if (telem_timer > 10000)
+        {
+            // Check connection
+            shared.astrodev_rx.Ping(false);
+            shared.astrodev_rx.GetTCVConfig(false);
+            shared.astrodev_rx.GetTelemetry();
+            telem_timer = 0;
+            // Attempt receive of any of the above packets
             continue;
         }
-        else
+
+        // Check if we are still connected
+        if (last_connected > unconnected_timeout)
         {
-            //packet.header.radio = ...; // TODO: Don't know atm
-
-
-            // Handle payload
-            Astrodev::Command cmd = (Astrodev::Command)iretn;
-            switch (cmd)
+            // Handle not-connnected status
+            iretn = shared.connect_radio(shared.astrodev_rx, 449900, 449900);
+            if (iretn < 0)
             {
-            // 0 is Acknowledge-type, view comment on return types for Astrodev::Receive()
-            // Though this does mean that I can't distinguish between acks and noacks
-            case (Astrodev::Command)0:
+                // Keep attempting reconnect
                 continue;
-#ifndef MOCK_TESTING
-            case Astrodev::Command::NOOP:
-            case Astrodev::Command::GETTCVCONFIG:
-            case Astrodev::Command::TELEMETRY:
-                // Setup PacketComm packet stuff
-                packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
-                packet.header.nodeorig = IOBC_NODE_ID;
-                packet.header.nodedest = IOBC_NODE_ID;
-                packet.data.resize(incoming_message.header.sizelo + 4);
-                packet.data[0] = LI3RX;
-                packet.data[1] = 0x20;
-                packet.data[2] = (uint8_t)cmd;
-                packet.data[3] = incoming_message.header.sizelo;
-                memcpy(packet.data.data()+4, &incoming_message.payload[0], incoming_message.header.sizelo);
-                break;
-            case Astrodev::Command::RECEIVE:
-                // Packets from the ground will be in PacketComm protocol
-                // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
-                Serial.print("in rx receive, bytes:");
-                Serial.println(incoming_message.header.sizelo);
-                packet.wrapped.resize(incoming_message.header.sizelo-18);
-                memcpy(packet.wrapped.data(), &incoming_message.payload[16], incoming_message.header.sizelo-18);
-                iretn = packet.Unwrap();
-                if (iretn < 0)
-                {
-                    Serial.println("Unwrap fail in RX radio recv");
-                    continue;
-                }
-                break;
-#else
-            // These cases here are for faking a radio interaction.
-            // These will be sent from the radio stack interface board's teensy.
-            // Any RECEIVE
-            case Astrodev::Command::RESET:
-            case Astrodev::Command::NOOP:
-            case Astrodev::Command::SETTCVCONFIG:
-            case Astrodev::Command::GETTCVCONFIG:
-                packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
-                packet.data.resize(1);
-                packet.data[0] = (uint8_t)cmd;
-                break;
-#endif
-            default:
-                Serial.print("cmd ");
-                Serial.print((uint16_t)cmd);
-                Serial.println(" not (yet) handled. Terminating...");
-                exit(-1);
-                break;
             }
-#ifdef DEBUG_PRINT
-            Serial.print("pushing to main queue, cmd ");
-            Serial.println((uint16_t)cmd);
-#endif
-            shared.push_queue(shared.main_queue, shared.main_lock, packet);
+            last_connected = 0;
         }
     }
+}
+
+void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
+{
+    // Handle rx radio messages
+    switch (msg.header.command)
+    {
+    // 0 is Acknowledge-type, view comment on return types for Astrodev::Receive()
+    // Though this does mean that I can't distinguish between acks and noacks
+    case (Astrodev::Command)0:
+        return;
+#ifndef MOCK_TESTING
+    case Astrodev::Command::NOOP:
+    case Astrodev::Command::GETTCVCONFIG:
+    case Astrodev::Command::TELEMETRY:
+        // Setup PacketComm packet stuff
+        packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
+        packet.header.nodeorig = IOBC_NODE_ID;
+        packet.header.nodedest = IOBC_NODE_ID;
+        packet.data.resize(msg.header.sizelo + 4);
+        packet.data[0] = LI3RX;
+        packet.data[1] = 0x20;
+        packet.data[2] = (uint8_t)msg.header.command;
+        packet.data[3] = msg.header.sizelo;
+        memcpy(packet.data.data()+4, &msg.payload[0], msg.header.sizelo);
+        break;
+    case Astrodev::Command::RECEIVE:
+        // Packets from the ground will be in PacketComm protocol
+        // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
+        Serial.print("in rx receive, bytes:");
+        Serial.println(msg.header.sizelo);
+        packet.wrapped.resize(msg.header.sizelo-18);
+        memcpy(packet.wrapped.data(), &msg.payload[16], msg.header.sizelo-18);
+        iretn = packet.Unwrap();
+        if (iretn < 0)
+        {
+            Serial.println("Unwrap fail in RX radio recv");
+            return;
+        }
+        break;
+#else
+    // These cases here are for faking a radio interaction.
+    // These will be sent from the radio stack interface board's teensy.
+    // Any RECEIVE
+    case Astrodev::Command::RESET:
+    case Astrodev::Command::NOOP:
+    case Astrodev::Command::SETTCVCONFIG:
+    case Astrodev::Command::GETTCVCONFIG:
+        packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
+        packet.data.resize(1);
+        packet.data[0] = (uint8_t)cmd;
+        break;
+#endif
+    default:
+        Serial.print("cmd ");
+        Serial.print((uint16_t)msg.header.command);
+        Serial.println(" not (yet) handled. Terminating...");
+        exit(-1);
+        break;
+    }
+#ifdef DEBUG_PRINT
+    Serial.print("pushing to main queue, cmd ");
+    Serial.println((uint16_t)cmd);
+#endif
+    shared.push_queue(shared.main_queue, shared.main_lock, packet);
 }

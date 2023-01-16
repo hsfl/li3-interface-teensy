@@ -2,6 +2,7 @@
 #include "helpers/RadioCommands.h"
 #include "module/radio_recv.h"
 #include "module/radio_send.h"
+#include "module/tx_radio_loop.h"
 #include "module/iobc_recv.h"
 #include "helpers/TestBlinker.h"
 
@@ -45,7 +46,7 @@ void setup()
     // digitalWrite(12, LOW);
 
     // Initialize the astrodev radio
-    iretn = shared.init_radios(&Serial2, &Serial5, ASTRODEV_BAUD);
+    iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
     if (iretn < 0)
     {
         Serial.println("Error initializing Astrodev radio. Exiting...");
@@ -55,10 +56,10 @@ void setup()
 
     // TODO: determine more appropriate stack size
     // Start send/receive loops
-    // threads.addThread(shared., 0, RX_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+    // threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+    // threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
 
     Serial.println("Setup complete");
