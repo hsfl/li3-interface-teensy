@@ -6,6 +6,10 @@
 #include "module/iobc_recv.h"
 #include "helpers/TestBlinker.h"
 
+// For rebooting the teensy on software init failure
+#define RESTART_ADDR       0xE000ED0C
+#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
+
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
 void handle_main_queue_packets();
@@ -30,12 +34,6 @@ void setup()
 
     // Each thread tick length
     threads.setSliceMicros(10);
-    // Wait for serial monitor
-    Serial.println("Delay 4 sec");
-    delay(4000);
-    // Serial.println("before print");
-    //Lithium3::BlinkPattern(Lithium3::ProgramState::INIT_SUCCESSFUL);
-    // Serial.println("after print");
 
     // BURN WIRE CODE DON'T TOUCH
     // Must be HIGH for about 30 seconds
@@ -49,7 +47,9 @@ void setup()
     iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
     if (iretn < 0)
     {
-        Serial.println("Error initializing Astrodev radio. Exiting...");
+        Serial.println("Error initializing Astrodev radio. Restarting...");
+        delay(1000);
+        WRITE_RESTART(0x5FA0004);
         exit(-1);
     }
     Serial.println("Radio init successful");

@@ -33,11 +33,14 @@ namespace Cosmos {
                 do
                 {
                     iretn = Reset();
-                    threads.delay(2000);
                     if (--retries < 0)
                     {
                         Serial.println("Radio reset unsuccessful");
                         return iretn;
+                    }
+                    else
+                    {
+                        threads.delay(2000);
                     }
                 } while (iretn < 0);
 
@@ -47,10 +50,13 @@ namespace Cosmos {
                 if ((iretn=Ping()) < 0)
                 {
                     Reset();
-                    threads.delay(5000);
                     if ((iretn=Ping()) < 0)
                     {
                         return iretn;
+                    }
+                    else
+                    {
+                        threads.delay(5000);
                     }
                 }
                 Serial.println("Radio ping test successful");
@@ -272,8 +278,10 @@ namespace Cosmos {
 
                 threads.delay(10);
                 iretn = Receive(message);
+#ifdef DEBUG_PRINT
                 Serial.print("GReceive iretn: ");
                 Serial.println(iretn);
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -327,6 +335,11 @@ namespace Cosmos {
 
             int32_t Astrodev::GetTelemetry()
             {
+                return GetTelemetry(true);
+            }
+
+            int32_t Astrodev::GetTelemetry(bool get_response)
+            {
                 int32_t iretn;
                 frame message;
 
@@ -342,6 +355,24 @@ namespace Cosmos {
                 {
                     return iretn;
                 }
+
+                // Don't try to get the response
+                if (!get_response)
+                {
+                    return iretn;
+                }
+
+                threads.delay(10);
+                iretn = Receive(message);
+#ifdef DEBUG_PRINT
+                Serial.print("TReceive iretn: ");
+                Serial.println(iretn);
+#endif
+                if (iretn < 0)
+                {
+                    return iretn;
+                }
+                memcpy(&last_telem, &message.payload[0], message.header.sizelo);
 
                 return 0;
             }
@@ -385,7 +416,7 @@ namespace Cosmos {
                 int16_t ch = -1;
 
                 // Wait for sync characters
-                elapsedMillis wdt;
+                elapsedMillis wdt = 0;
                 while (wdt < 1000)
                 {
                     threads.delay(10);
@@ -497,8 +528,8 @@ namespace Cosmos {
                 // Read rest of payload bytes
                 size_t sizeToRead = size+2;
 #ifdef DEBUG_PRINT
-                Serial.print("size: ");
-                Serial.println(size);
+                Serial.print("sizeToRead: ");
+                Serial.println(sizeToRead);
 #endif
                 size_t readLocation = 0;
                 bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
@@ -512,13 +543,13 @@ namespace Cosmos {
                 {
                     sizeToRead -= bytesRead;
                     readLocation += bytesRead;
-                    threads.delay(500);
+                    threads.delay(10);
                     bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
 #ifdef DEBUG_PRINT
                 Serial.print("bytesRead: ");
                 Serial.println(bytesRead);
 #endif
-                    if (++iterations > 20)
+                    if (++iterations > 4)
                     {
                         break;
                     }

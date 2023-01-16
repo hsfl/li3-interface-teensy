@@ -244,6 +244,7 @@ namespace Cosmos {
                 int32_t SetTCVConfig();
                 int32_t SetTCVConfig(bool get_response);
                 int32_t GetTelemetry();
+                int32_t GetTelemetry(bool get_response);
                 int32_t SetRFConfig(rf_config config);
                 int32_t Transmit(frame &message);
                 int32_t Transmit(Cosmos::Support::PacketComm &packet);

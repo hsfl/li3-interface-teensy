@@ -8,6 +8,7 @@
 
 #define RX_STACK_SIZE 6000
 #define TX_STACK_SIZE 6000
+#define MAX_QUEUE_SIZE 50
 
 #define READ_BUFFER_SIZE 512
 
