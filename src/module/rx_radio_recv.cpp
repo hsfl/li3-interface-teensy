@@ -41,8 +41,8 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
         {
             // Check connection
             shared.astrodev_rx.Ping(false);
-            shared.astrodev_rx.GetTCVConfig(false);
-            shared.astrodev_rx.GetTelemetry();
+            // shared.astrodev_rx.GetTCVConfig(false);
+            shared.astrodev_rx.GetTelemetry(false);
             telem_timer = 0;
             // Attempt receive of any of the above packets
             continue;
@@ -111,7 +111,7 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     case Astrodev::Command::GETTCVCONFIG:
         packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
         packet.data.resize(1);
-        packet.data[0] = (uint8_t)cmd;
+        packet.data[0] = (uint8_t)msg.header.command;
         break;
 #endif
     default:
@@ -123,7 +123,7 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     }
 #ifdef DEBUG_PRINT
     Serial.print("pushing to main queue, cmd ");
-    Serial.println((uint16_t)cmd);
+    Serial.println((uint16_t)msg.header.command);
 #endif
     shared.push_queue(shared.main_queue, shared.main_lock, packet);
 }

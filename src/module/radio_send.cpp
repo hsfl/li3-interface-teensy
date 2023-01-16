@@ -46,10 +46,10 @@ void Cosmos::Module::Radio_interface::send_loop()
         {
             shared.astrodev_rx.Ping(false);
             shared.astrodev_rx.GetTCVConfig(false);
-            shared.astrodev_rx.GetTelemetry();
+            shared.astrodev_rx.GetTelemetry(false);
             shared.astrodev_tx.Ping(false);
             shared.astrodev_tx.GetTCVConfig(false);
-            shared.astrodev_tx.GetTelemetry();
+            shared.astrodev_tx.GetTelemetry(false);
             telem_timer = 0;
         }
 

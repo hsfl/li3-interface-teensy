@@ -40,7 +40,7 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSeri
     }
     Serial.println("TX Initialization success");
     BlinkPattern(ProgramState::RADIO_TX_INIT_SUCCESS);
-    Serial.println("RX and TX succesfully initialized!");
+    Serial.println("RX and TX successfully initialized!");
     BlinkPattern(ProgramState::INIT_SUCCESSFUL);
 
     return 0;
@@ -141,5 +141,9 @@ int32_t shared_resources::pop_queue(std::deque<Cosmos::Support::PacketComm>& que
 void shared_resources::push_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, const Cosmos::Support::PacketComm &packet)
 {
   Threads::Scope lock(mutex);
+  if (queue.size() > MAX_QUEUE_SIZE)
+  {
+      queue.pop_front();
+  }
   queue.push_back(packet);
 }

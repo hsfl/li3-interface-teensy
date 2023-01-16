@@ -41,8 +41,8 @@ void Cosmos::Module::Radio_interface::tx_radio_loop()
         {
             // Check connection
             shared.astrodev_tx.Ping(false);
-            shared.astrodev_tx.GetTCVConfig(false);
-            shared.astrodev_tx.GetTelemetry();
+            // shared.astrodev_tx.GetTCVConfig(false);
+            shared.astrodev_tx.GetTelemetry(false);
             telem_timer = 0;
             // Attempt receive of any of the above packets
             continue;
@@ -61,8 +61,9 @@ void Cosmos::Module::Radio_interface::tx_radio_loop()
             last_connected = 0;
         }
 
-        // Transmit
-        while (shared.pop_queue(shared.send_queue, shared.send_lock, packet) >= 0)
+        // Transmit bursts of 10 seconds
+        while (shared.pop_queue(shared.send_queue, shared.send_lock, packet) >= 0
+        && telem_timer < 10000)
         {
             send_tx_packet(packet);
         }
@@ -112,7 +113,7 @@ void Cosmos::Module::Radio_interface::handle_tx_recv(const Astrodev::frame& msg)
     case Astrodev::Command::GETTCVCONFIG:
         packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
         packet.data.resize(1);
-        packet.data[0] = (uint8_t)cmd;
+        packet.data[0] = (uint8_t)msg.header.command;
         break;
     
 #endif
@@ -131,14 +132,14 @@ void Cosmos::Module::Radio_interface::send_tx_packet(Cosmos::Support::PacketComm
     int32_t iretn = 0;
     uint8_t retries = 0;
     Serial.println(" | Transmit message...");
+    elapsedMillis ack_timeout;
     while(true)
     {
+        ack_timeout = 0;
         if (!shared.astrodev_tx.buffer_full.load())
         {
             // Attempt transmit if transfer bull is not full
             iretn = shared.astrodev_tx.Transmit(packet);
-            Serial.print("Transmit iretn: ");
-            Serial.println(iretn);
             // Retry serial write error
             if (iretn < 0 && ((++retries) <= max_retries))
             {
@@ -146,7 +147,7 @@ void Cosmos::Module::Radio_interface::send_tx_packet(Cosmos::Support::PacketComm
                 continue;
             }
             // Perform ACK check
-            elapsedMillis ack_timeout;
+            ack_timeout = 0;
             while (!shared.astrodev_tx.ack_transmit.load() && ack_timeout < 1000)
             {
                 iretn = shared.astrodev_tx.Receive(incoming_message);
