@@ -6,7 +6,7 @@
 #define RX_PACKET_SIZE 250
 #define TX_PACKET_SIZE 250
 
-#define RX_STACK_SIZE 6000
+#define RX_STACK_SIZE 9000
 #define TX_STACK_SIZE 6000
 #define MAX_QUEUE_SIZE 50
 

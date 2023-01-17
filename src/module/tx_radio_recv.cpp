@@ -12,6 +12,8 @@ namespace
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
+
+    elapsedMillis telem_timer;
 }
 
 void Cosmos::Module::Radio_interface::tx_recv_loop()
@@ -24,17 +26,35 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
     {
         threads.delay(10);
 
+        if (telem_timer > 20000)
+        {
+            // Check connection
+            // shared.astrodev_tx.Ping(false);
+            // shared.astrodev_tx.GetTCVConfig(false);
+            shared.astrodev_tx.GetTelemetry(false);
+            telem_timer = 0;
+            // Attempt receive of any of the above packets
+        }
+
         iretn = shared.astrodev_tx.Receive(incoming_message);
         if (iretn < 0)
         {
+            // Serial.print("tx.Receive returned ");
+            // Serial.println(iretn);
             // Yield until successful read
             continue;
         }
         else
         {
+            // Serial.print("tx.Receive returned ");
+            // Serial.print(iretn);
+            // Serial.print(" [4]: ");
+            // Serial.print(incoming_message.preamble[4]);
+            // Serial.print(" [5]: ");
+            // Serial.println(incoming_message.preamble[4]);
             //packet.header.radio = ...; // TODO: Don't know atm
             packet.header.nodedest = IOBC_NODE_ID;
-            packet.header.nodeorig = GROUND_NODE_ID;
+            packet.header.nodeorig = IOBC_NODE_ID;
 
             // Handle payload
             Astrodev::Command cmd = (Astrodev::Command)iretn;

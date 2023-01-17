@@ -57,9 +57,9 @@ void setup()
     // TODO: determine more appropriate stack size
     // Start send/receive loops
     threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-    // threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
-    // threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+    threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+    // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
 
     Serial.println("Setup complete");
@@ -102,6 +102,14 @@ void handle_main_queue_packets()
                 // These are our periodic telem grabbing responses, send to iobc
                 if (packet.header.nodeorig == IOBC_NODE_ID)
                 {
+                    // TODO: handle commands meant to be executed here that came
+                    // from the iobc
+                    if (packet.data.size() == 1 && packet.data[0] == 255)
+                    {
+                        Serial.println("Got Reboot command. Restarting...");
+                        delay(1000);
+                        WRITE_RESTART(0x5FA0004);
+                    }
                     Serial.print("Got radio communicate response unit:");
                     Serial.print(packet.data[0]);
                     Serial.print(" type:");

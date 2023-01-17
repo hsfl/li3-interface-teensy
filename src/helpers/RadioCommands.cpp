@@ -5,10 +5,10 @@ extern shared_resources shared;
 
 void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
 {
-    switch(packet.data[1])
+    switch(packet.data[2])
     {
     case 7:
-        shared.astrodev_tx.GetTelemetry(false);
+        !packet.data[0] ? shared.astrodev_rx.GetTelemetry(false) : shared.astrodev_tx.GetTelemetry(false);
         break;
     default:
         break;

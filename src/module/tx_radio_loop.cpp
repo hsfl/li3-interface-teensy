@@ -37,12 +37,12 @@ void Cosmos::Module::Radio_interface::tx_radio_loop()
         }
 
         // Grab Telemetry every 10 seconds, and check if we are still connected
-        if (telem_timer > 10000)
+        if (telem_timer > 20000)
         {
             // Check connection
             shared.astrodev_tx.Ping(false);
             // shared.astrodev_tx.GetTCVConfig(false);
-            shared.astrodev_tx.GetTelemetry(false);
+            // shared.astrodev_tx.GetTelemetry(false);
             telem_timer = 0;
             // Attempt receive of any of the above packets
             continue;
@@ -148,17 +148,18 @@ void Cosmos::Module::Radio_interface::send_tx_packet(Cosmos::Support::PacketComm
             }
             // Perform ACK check
             ack_timeout = 0;
-            while (!shared.astrodev_tx.ack_transmit.load() && ack_timeout < 1000)
-            {
-                iretn = shared.astrodev_tx.Receive(incoming_message);
-                if (iretn >= 0)
-                {
-                    last_connected = 0;
-                    handle_tx_recv(incoming_message);
-                    break;
-                }
-                threads.delay(10);
-            }
+            // while (!shared.astrodev_tx.ack_transmit.load() && ack_timeout < 1000)
+            // {
+            //     Serial.println("ACK CHECK");
+            //     iretn = shared.astrodev_tx.Receive(incoming_message);
+            //     if (iretn >= 0)
+            //     {
+            //         last_connected = 0;
+            //         handle_tx_recv(incoming_message);
+            //         break;
+            //     }
+            //     threads.delay(10);
+            // }
             // Transmission attempt end
 
             // TODO: Perhaps attempt resend on NACK?

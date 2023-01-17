@@ -5,6 +5,9 @@
 
 void Lithium3::BlinkPattern(Lithium3::ProgramState state)
 {
+#ifndef DEBUG_BLINK
+    return;
+#else
     switch(state)
     {
     // .
@@ -58,6 +61,7 @@ void Lithium3::BlinkPattern(Lithium3::ProgramState state)
     }
     threads.delay(PULSE*10);
     return;
+#endif
 }
 
 void Lithium3::Blink(uint32_t on_ms, uint32_t off_ms)
