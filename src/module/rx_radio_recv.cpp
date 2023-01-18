@@ -13,7 +13,7 @@ namespace
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
     elapsedMillis last_connected;
-    elapsedMillis telem_timer;
+    elapsedMillis rx_telem_timer;
 
     // If it has been more than 30 seconds since last 
     const unsigned long unconnected_timeout = 30 * 1000;
@@ -37,13 +37,13 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
         }
 
         // Grab Telemetry every 10 seconds, and check if we are still connected
-        if (telem_timer > 10000)
+        if (rx_telem_timer > 10000)
         {
             // Check connection
-            shared.astrodev_rx.Ping(false);
+            // shared.astrodev_rx.Ping(false);
             // shared.astrodev_rx.GetTCVConfig(false);
             shared.astrodev_rx.GetTelemetry(false);
-            telem_timer = 0;
+            rx_telem_timer = 0;
             // Attempt receive of any of the above packets
             continue;
         }

@@ -13,7 +13,7 @@ namespace
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
 
-    elapsedMillis telem_timer;
+    elapsedMillis tx_telem_timer;
 }
 
 void Cosmos::Module::Radio_interface::tx_recv_loop()
@@ -26,13 +26,13 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
     {
         threads.delay(10);
 
-        if (telem_timer > 20000)
+        if (tx_telem_timer > 20000)
         {
             // Check connection
-            // shared.astrodev_tx.Ping(false);
+            shared.astrodev_tx.Ping(false);
             // shared.astrodev_tx.GetTCVConfig(false);
             shared.astrodev_tx.GetTelemetry(false);
-            telem_timer = 0;
+            tx_telem_timer = 0;
             // Attempt receive of any of the above packets
         }
 

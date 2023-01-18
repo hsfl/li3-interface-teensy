@@ -21,7 +21,7 @@ void Cosmos::Module::Radio_interface::send_loop()
 {
     Serial.println("tx_loop started");
     int32_t iretn = 0;
-    elapsedMillis telem_timer;
+    // elapsedMillis telem_timer;
 
     // TX loop continually attempts to flush its outgoing packet queue
     while(true)
@@ -42,16 +42,16 @@ void Cosmos::Module::Radio_interface::send_loop()
         threads.delay(10);
 
         // Periodic telemetry grabbing
-        if (telem_timer > 10*1000)
-        {
-            shared.astrodev_rx.Ping(false);
-            shared.astrodev_rx.GetTCVConfig(false);
-            shared.astrodev_rx.GetTelemetry(false);
-            shared.astrodev_tx.Ping(false);
-            shared.astrodev_tx.GetTCVConfig(false);
-            shared.astrodev_tx.GetTelemetry(false);
-            telem_timer = 0;
-        }
+        // if (telem_timer > 10*1000)
+        // {
+        //     shared.astrodev_rx.Ping(false);
+        //     shared.astrodev_rx.GetTCVConfig(false);
+        //     shared.astrodev_rx.GetTelemetry(false);
+        //     shared.astrodev_tx.Ping(false);
+        //     shared.astrodev_tx.GetTCVConfig(false);
+        //     shared.astrodev_tx.GetTelemetry(false);
+        //     telem_timer = 0;
+        // }
 
         // ------- Stuff below here for debugging, remove later
         // if (sentNum > 128)

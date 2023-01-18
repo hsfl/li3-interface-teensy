@@ -543,7 +543,7 @@ namespace Cosmos {
                 {
                     sizeToRead -= bytesRead;
                     readLocation += bytesRead;
-                    // threads.delay(10);
+                    threads.delay(10);
                     bytesRead = serial->readBytes(&message.payload[readLocation], sizeToRead);
 #ifdef DEBUG_PRINT
                 Serial.print("bytesRead: ");
