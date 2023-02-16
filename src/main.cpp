@@ -10,6 +10,11 @@
 #define RESTART_ADDR       0xE000ED0C
 #define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
 
+// For setting Teensy Clock Frequency (only for Teensy 4.0 and 4.1)
+#if defined(__IMXRT1062__)
+extern "C" uint32_t set_arm_clock(uint32_t frequency);
+#endif
+
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
 void handle_main_queue_packets();
@@ -26,11 +31,15 @@ namespace
 
 void setup()
 {
-    // initialize LED digital pin as an output.
-    pinMode(LED_BUILTIN, OUTPUT);
-
     // Setup serial stuff
     Serial.begin(115200);
+
+    #if defined(__IMXRT1062__)
+        set_arm_clock(150000000); // Allowed Frequencies (MHz): 24, 150, 396, 450, 528, 600
+    #endif
+
+    // initialize LED digital pin as an output.
+    pinMode(LED_BUILTIN, OUTPUT);
 
     // Each thread tick length
     threads.setSliceMicros(10);
