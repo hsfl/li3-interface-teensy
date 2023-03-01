@@ -20,6 +20,10 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
 void handle_main_queue_packets();
+void get_temp_sensor_measurements();
+void control_burnwire();
+
+elapsedMillis temp_timer;
 
 //! Global shared resources defined here
 shared_resources shared(Serial1);
@@ -45,30 +49,6 @@ void setup()
 
     // Each thread tick length
     threads.setSliceMicros(10);
-
-    // Testing AD590MF temp sensor
-    pinMode(MUXA, OUTPUT); digitalWrite(MUXA, LOW);
-    pinMode(MUXB, OUTPUT); digitalWrite(MUXB, HIGH);
-    pinMode(MUXC, OUTPUT); digitalWrite(MUXC, HIGH);
-    pinMode(AD590MF_TEMP_PIN, INPUT);
-    while(true)
-    {
-        Serial.print("TEMP: ");
-        // 10 bits of read resolution (0~1023)
-        // 1 mV/K
-        // Reference voltage 3.3V
-        analogReadResolution(10);
-        float volt = (analogRead(AD590MF_TEMP_PIN)/1024.) * 3.3;
-        // V = IR ... => ... I = V/R
-        // R = 7.77 kOhms
-        // Temp (K) = I (uA) = V/R * 1000000
-        float kelvin = volt / .00777;
-        Serial.print(volt);
-        Serial.print(" ");
-        Serial.println(kelvin-273.15);
-        delay(1000);
-    }
-    exit(0);
 
     // Initialize the astrodev radio
     iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
@@ -96,6 +76,12 @@ void setup()
 //! Main loop
 void loop()
 {
+    // Check burnwire timer
+    control_burnwire();
+
+    // Get temperatures
+    get_temp_sensor_measurements();
+
     // Process command-type packets for this program
     handle_main_queue_packets();
 
@@ -172,5 +158,60 @@ void handle_main_queue_packets()
             }
             break;
         }
+    }
+}
+
+void get_temp_sensor_measurements()
+{
+    // Get temperature every 10 seconds
+    if (temp_timer < 10000)
+    {
+        return;
+    }
+    temp_timer = 0;
+
+    // AD590MF temp sensor
+    pinMode(AD590MF_TEMP_PIN, INPUT);
+    analogReadResolution(10);
+    // Get measurements for each of the 8 temp sensors
+    // The connected sensor is selected by turning 3 bits/pins hi or lo
+    for (uint8_t i=0; i < 8; ++i)
+    {
+        // Measurement for temp sensor n: 0000 0cba
+        uint8_t a_out = i & 0x1;
+        uint8_t b_out = (i & 0x2) >> 1;
+        uint8_t c_out = (i & 0x4) >> 2;
+        pinMode(MUXA, OUTPUT); digitalWrite(MUXA, a_out);
+        pinMode(MUXB, OUTPUT); digitalWrite(MUXB, b_out);
+        pinMode(MUXC, OUTPUT); digitalWrite(MUXC, c_out);
+        Serial.print("TEMP SENSOR(");
+        Serial.print(unsigned(i));
+        Serial.print("): ");
+        // 10 bits of read resolution (0~1023)
+        // 1 mV/K
+        // Reference voltage 3.3V
+        float volt = (analogRead(AD590MF_TEMP_PIN)/1024.) * 3.3;
+        // V = IR    =>    I = V/R
+        // R = 7.77 kOhms
+        // Temp (K) = I (uA) = V/R * 1000000
+        float kelvin = volt / .00777;
+        Serial.println(kelvin-273.15);
+    }
+    pinMode(AD590MF_TEMP_PIN, INPUT_DISABLE);
+    
+    delay(1000);
+}
+
+void control_burnwire()
+{
+    // Set burnwire pin to LOW after time exceeds on time
+    // If burnwire_on_time is 0, then the burnwire is kept HIGH until manually commanded to turn LOW
+    if (shared.burnwire_state == HIGH && shared.burnwire_on_time && shared.burnwire_timer > shared.burnwire_on_time)
+    {
+        shared.burnwire_state = LOW;
+        Serial.print("Setting burn wire ");
+        Serial.println("LOW");
+        pinMode(12, OUTPUT);
+        digitalWrite(12, LOW);
     }
 }

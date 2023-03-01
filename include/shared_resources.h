@@ -43,6 +43,12 @@ public:
     int32_t pop_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, Cosmos::Support::PacketComm &packet);
     void push_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, const Cosmos::Support::PacketComm &packet);
 
+    // Set burnwire pin to LOW when burnwire_timer exceeds this value
+    uint32_t burnwire_on_time = 0;
+    // Control timer for how long burnwire is on for
+    elapsedMillis burnwire_timer;
+    // Keep track of state of burnwire
+    uint8_t burnwire_state = HIGH;
 private:
     int32_t init_radio(Cosmos::Devices::Radios::Astrodev &astrodev, HardwareSerial* hw_serial, uint32_t baud_rate, uint32_t tx_freq, uint32_t rx_freq);
 };
