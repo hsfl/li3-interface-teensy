@@ -6,14 +6,16 @@
 #include "module/iobc_recv.h"
 #include "helpers/TestBlinker.h"
 
-// For rebooting the teensy on software init failure
-#define RESTART_ADDR       0xE000ED0C
-#define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
-
 // For setting Teensy Clock Frequency (only for Teensy 4.0 and 4.1)
 #if defined(__IMXRT1062__)
 extern "C" uint32_t set_arm_clock(uint32_t frequency);
 #endif
+
+// Pins for AD590MF temp sensor
+#define MUXA 5
+#define MUXB 6
+#define MUXC 9
+#define AD590MF_TEMP_PIN 19
 
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
@@ -44,13 +46,29 @@ void setup()
     // Each thread tick length
     threads.setSliceMicros(10);
 
-    // BURN WIRE CODE DON'T TOUCH
-    // Must be HIGH for about 30 seconds
-    // Serial.println("Enabling burn wire");
-    // pinMode(12, OUTPUT);
-    // digitalWrite(12, HIGH);
-    // delay(30000);
-    // digitalWrite(12, LOW);
+    // Testing AD590MF temp sensor
+    pinMode(MUXA, OUTPUT); digitalWrite(MUXA, LOW);
+    pinMode(MUXB, OUTPUT); digitalWrite(MUXB, HIGH);
+    pinMode(MUXC, OUTPUT); digitalWrite(MUXC, HIGH);
+    pinMode(AD590MF_TEMP_PIN, INPUT);
+    while(true)
+    {
+        Serial.print("TEMP: ");
+        // 10 bits of read resolution (0~1023)
+        // 1 mV/K
+        // Reference voltage 3.3V
+        analogReadResolution(10);
+        float volt = (analogRead(AD590MF_TEMP_PIN)/1024.) * 3.3;
+        // V = IR ... => ... I = V/R
+        // R = 7.77 kOhms
+        // Temp (K) = I (uA) = V/R * 1000000
+        float kelvin = volt / .00777;
+        Serial.print(volt);
+        Serial.print(" ");
+        Serial.println(kelvin-273.15);
+        delay(1000);
+    }
+    exit(0);
 
     // Initialize the astrodev radio
     iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
@@ -108,17 +126,14 @@ void handle_main_queue_packets()
         {
         case PacketComm::TypeId::CommandRadioAstrodevCommunicate:
             {
-                // These are our periodic telem grabbing responses, send to iobc
-                if (packet.header.nodeorig == IOBC_NODE_ID)
+                // These packets are intended for this program, handle here
+                if (packet.header.nodedest == LI3TEENSY_ID || packet.header.nodeorig == GROUND_NODE_ID)
                 {
-                    // TODO: handle commands meant to be executed here that came
-                    // from the iobc
-                    if (packet.data.size() == 1 && packet.data[0] == 255)
-                    {
-                        Serial.println("Got Reboot command. Restarting...");
-                        delay(1000);
-                        WRITE_RESTART(0x5FA0004);
-                    }
+                    Lithium3::RadioCommand(packet);
+                }
+                // These are our periodic telem grabbing responses, send to iobc
+                else if (packet.header.nodeorig == IOBC_NODE_ID)
+                {
                     Serial.print("Got radio communicate response unit:");
                     Serial.print(packet.data[0]);
                     Serial.print(" type:");
@@ -132,11 +147,6 @@ void handle_main_queue_packets()
                     shared.SLIPIobcSerial.beginPacket();
                     shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
                     shared.SLIPIobcSerial.endPacket();
-                }
-                // If the packet command came from ground, execute
-                else if (packet.header.nodeorig == GROUND_NODE_ID)
-                {
-                    Lithium3::RadioCommand(packet);
                 }
             }
             break;

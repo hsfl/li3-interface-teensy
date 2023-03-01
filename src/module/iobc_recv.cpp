@@ -59,14 +59,17 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
             shared.push_queue(shared.send_queue, shared.send_lock, packet);
             break;
         case IOBC_NODE_ID:
+            // Tag this packet to be handled internally
+            packet.header.nodedest = LI3TEENSY_ID;
             Serial.println("To me");
             Serial.print("Packet header type:");
             Serial.println((uint16_t)packet.header.type);
             shared.push_queue(shared.main_queue, shared.main_lock, packet);
             break;
+        case UNIBAP_NODE_ID:
         default:
-            Serial.println("Packet destination not handled, exiting...");
-            exit(-1);
+            Serial.println("Packet destination not handled");
+            // exit(-1);
             break;
         }
 #ifdef DEBUG_PRINT
