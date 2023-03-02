@@ -81,7 +81,7 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
     memset(&astrodev.tcv_configuration.config1, 0, 2);
     memset(&astrodev.tcv_configuration.config2, 0, 2);
 
-    int8_t retries = 5;
+    int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
 
     while ((iretn = astrodev.SetTCVConfig()) < 0)
     {
@@ -96,7 +96,7 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
     }
     Serial.println("SetTCVConfig successful");
 
-    retries = 5;
+    retries = RADIO_INIT_CONNECT_ATTEMPTS;
     while ((iretn = astrodev.GetTCVConfig()) < 0)
     {
         Serial.println("Failed to gettcvconfig astrodev");
@@ -148,4 +148,24 @@ void shared_resources::push_queue(std::deque<Cosmos::Support::PacketComm>& queue
       queue.pop_front();
   }
   queue.push_back(packet);
+}
+
+void shared_resources::set_radios_initialized_state(bool state)
+{
+    radios_initialized = state;
+}
+
+bool shared_resources::get_radios_initialized_state()
+{
+    return radios_initialized;
+}
+
+void shared_resources::set_radios_threads_started(bool state)
+{
+    radio_threads_started = state;
+}
+
+bool shared_resources::get_radios_threads_started()
+{
+    return radio_threads_started;
 }

@@ -19,6 +19,7 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 
 // Function forward declarations
 void sendpacket(Cosmos::Support::PacketComm &packet);
+void initialize_radios();
 void handle_main_queue_packets();
 void get_temp_sensor_measurements();
 void control_burnwire();
@@ -50,23 +51,7 @@ void setup()
     // Each thread tick length
     threads.setSliceMicros(10);
 
-    // Initialize the astrodev radio
-    iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
-    if (iretn < 0)
-    {
-        Serial.println("Error initializing Astrodev radio. Restarting...");
-        delay(1000);
-        WRITE_RESTART(0x5FA0004);
-        exit(-1);
-    }
-    Serial.println("Radio init successful");
-
     // TODO: determine more appropriate stack size
-    // Start send/receive loops
-    threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
-    threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-    // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
 
     Serial.println("Setup complete");
@@ -76,6 +61,12 @@ void setup()
 //! Main loop
 void loop()
 {
+    // Initialize radios if it they are not yet
+    if (!shared.get_radios_initialized_state())
+    {
+        initialize_radios();
+    }
+
     // Check burnwire timer
     control_burnwire();
 
@@ -159,6 +150,31 @@ void handle_main_queue_packets()
             break;
         }
     }
+}
+
+void initialize_radios()
+{
+    // Initialize the astrodev radio
+    iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
+    if (iretn < 0)
+    {
+        Serial.println("Error initializing Astrodev radio. Restarting...");
+        delay(1000);
+        WRITE_RESTART(0x5FA0004);
+        exit(-1);
+    }
+    // Start send/receive loops
+    // Do it only once
+    if (!shared.get_radios_threads_started())
+    {
+        threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
+        threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+        threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+        // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
+        shared.set_radios_threads_started(true);
+    }
+    shared.set_radios_initialized_state(true);
+    Serial.println("Radio init successful");
 }
 
 void get_temp_sensor_measurements()

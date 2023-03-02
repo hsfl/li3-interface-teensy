@@ -22,6 +22,8 @@
 #define LI3RX 0
 #define LI3TX 1
 
+// Number of times to attempt reconnect of radios during initialization
+#define RADIO_INIT_CONNECT_ATTEMPTS 10
 
 // For rebooting the teensy on software init failure
 #define RESTART_ADDR       0xE000ED0C

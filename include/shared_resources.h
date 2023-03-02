@@ -49,8 +49,17 @@ public:
     elapsedMillis burnwire_timer;
     // Keep track of state of burnwire
     uint8_t burnwire_state = HIGH;
+
+    void set_radios_initialized_state(bool state);
+    bool get_radios_initialized_state();
+    void set_radios_threads_started(bool state);
+    bool get_radios_threads_started();
 private:
     int32_t init_radio(Cosmos::Devices::Radios::Astrodev &astrodev, HardwareSerial* hw_serial, uint32_t baud_rate, uint32_t tx_freq, uint32_t rx_freq);
+    // Keep track of whether radio initialization state
+    bool radios_initialized = false;
+    // Only start radio threads once
+    bool radio_threads_started = false;
 };
 
 #endif
