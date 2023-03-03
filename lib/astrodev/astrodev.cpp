@@ -29,7 +29,7 @@ namespace Cosmos {
             {
                 int32_t iretn = 0;
                 int32_t retries = 3;
-                Serial.println("Connecting to radio, resetting...");
+                Serial.println("Connecting to radio, resetting radio...");
                 do
                 {
                     iretn = Reset();

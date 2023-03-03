@@ -27,7 +27,7 @@ void SetBurnwire(const Cosmos::Support::PacketComm &packet)
 
     // burn wire pin will be set LOW after burnwire_timer exceeds this value
     shared.burnwire_on_time = 0; 
-    if (packet.data.size() == 6)
+    if (packet.data.size() == 6 && shared.burnwire_state)
     {
         shared.burnwire_on_time = packet.data[5] * 1000;
     }
@@ -38,7 +38,7 @@ void SetBurnwire(const Cosmos::Support::PacketComm &packet)
     Serial.print(shared.burnwire_state ? "HIGH" : "LOW");
     if (shared.burnwire_on_time)
     {
-        Serial.print(" after ");
+        Serial.print(" for ");
         Serial.print(unsigned(packet.data[5]) * 1000);
         Serial.print(" milliseconds.");
     }
