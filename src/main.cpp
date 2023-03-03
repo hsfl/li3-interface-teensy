@@ -65,6 +65,7 @@ void loop()
     if (!shared.get_radios_initialized_state())
     {
         initialize_radios();
+        threads.delay(10);
     }
 
     // Check burnwire timer
@@ -158,10 +159,7 @@ void initialize_radios()
     iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
     if (iretn < 0)
     {
-        Serial.println("Error initializing Astrodev radio. Restarting...");
-        delay(1000);
-        WRITE_RESTART(0x5FA0004);
-        exit(-1);
+        return;
     }
     // Start send/receive loops
     // Do it only once
