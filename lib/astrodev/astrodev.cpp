@@ -28,12 +28,12 @@ namespace Cosmos {
             int32_t Astrodev::Connect()
             {
                 int32_t iretn = 0;
-                int32_t retries = 5;
+                int32_t retries = 3;
                 Serial.println("Connecting to radio, resetting...");
                 do
                 {
                     iretn = Reset();
-                    if (--retries < 0)
+                    if (--retries <= 0)
                     {
                         Serial.println("Radio reset unsuccessful");
                         return iretn;
