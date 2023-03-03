@@ -60,6 +60,10 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
     //
     // Unit:
     // - 0 is rx radio, 1 is tx radio
+    if (packet.data.size() < 3)
+    {
+        return;
+    }
 
     switch(packet.data[2])
     {
