@@ -13,8 +13,7 @@ void send_test_transmit_packet();
 void handle_main_queue_packets();
 void fake_radio_response_creator(Astrodev::Command cmd);
 int32_t fake_transmit(Astrodev::frame &message, uint8_t size);
-int32_t fake_transmit(PacketComm& packet);
-
+int32_t fake_transmit(PacketComm &packet);
 
 namespace
 {
@@ -63,8 +62,6 @@ void loop()
         }
     }
 
-    
-    
     threads.delay(10);
 }
 
@@ -79,7 +76,7 @@ void handle_main_queue_packets()
 #ifdef DEBUG_PRINT
         char msg[4];
         Serial.print("main: ");
-        for (uint16_t i=0; i<packet.data.size(); i++)
+        for (uint16_t i = 0; i < packet.data.size(); i++)
         {
             sprintf(msg, "0x%02X", packet.data[i]);
             Serial.print(msg);
@@ -88,31 +85,30 @@ void handle_main_queue_packets()
         Serial.println();
 #endif
         using namespace Cosmos::Support;
-        switch(packet.header.type)
+        switch (packet.header.type)
         {
-        case PacketComm::TypeId::CommandPing:
-            {
-                Serial.println("Pong!");
-            }
-            break;
+        case PacketComm::TypeId::CommandObcPing:
+        {
+            Serial.println("Pong!");
+        }
+        break;
         case PacketComm::TypeId::CommandRadioAstrodevCommunicate:
-            {
-                
-            }
-            break;
+        {
+        }
+        break;
         case PacketComm::TypeId::DataRadioResponse:
-            {
-                Serial.print("Radio response, cmd: ");
-                Serial.println(packet.data[0]);
-                fake_radio_response_creator((Astrodev::Command)packet.data[0]);
-            }
-            break;
+        {
+            Serial.print("Radio response, cmd: ");
+            Serial.println(packet.data[0]);
+            fake_radio_response_creator((Astrodev::Command)packet.data[0]);
+        }
+        break;
         default:
-            {
-                Serial.println("Packet type not handled, exiting...");
-                exit(-1);
-            }
-            break;
+        {
+            Serial.println("Packet type not handled, exiting...");
+            exit(-1);
+        }
+        break;
         }
     }
 }
@@ -122,60 +118,60 @@ void handle_main_queue_packets()
 void fake_radio_response_creator(Astrodev::Command cmd)
 {
     Astrodev::frame message;
-    switch(cmd)
+    switch (cmd)
     {
     case Astrodev::Command::NOOP:
-        {
-            message.header.command = Astrodev::Command::NOOP;
-            message.header.sizehi = 0x0a;
-            message.header.sizelo = 0x0a;
-            fake_transmit(message, 0);
-        }
-        break;
+    {
+        message.header.command = Astrodev::Command::NOOP;
+        message.header.sizehi = 0x0a;
+        message.header.sizelo = 0x0a;
+        fake_transmit(message, 0);
+    }
+    break;
     case Astrodev::Command::RESET:
-        {
-            // Stop sending packets on reset
-            initialized = false;
+    {
+        // Stop sending packets on reset
+        initialized = false;
 
-            message.header.command = Astrodev::Command::RESET;
-            message.header.sizehi = 0x0a;
-            message.header.sizelo = 0x0a;
-            fake_transmit(message, 0);
-        }
-        break;
+        message.header.command = Astrodev::Command::RESET;
+        message.header.sizehi = 0x0a;
+        message.header.sizelo = 0x0a;
+        fake_transmit(message, 0);
+    }
+    break;
     case Astrodev::Command::GETTCVCONFIG:
-        {
-            message.header.command = Astrodev::Command::GETTCVCONFIG;
-            message.header.sizehi = 0;
-            message.header.sizelo = sizeof(shared.astrodev_tx.tcv_configuration);
-            shared.astrodev_tx.tcv_configuration.interface_baud_rate = 0;
-            shared.astrodev_tx.tcv_configuration.power_amp_level = 220;
-            shared.astrodev_tx.tcv_configuration.rx_baud_rate = 1;
-            shared.astrodev_tx.tcv_configuration.tx_baud_rate = 1;
-            shared.astrodev_tx.tcv_configuration.ax25_preamble_length = 20;
-            shared.astrodev_tx.tcv_configuration.ax25_postamble_length = 20;
-            shared.astrodev_tx.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-            shared.astrodev_tx.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
-            shared.astrodev_tx.tcv_configuration.tx_frequency = 400800;
-            shared.astrodev_tx.tcv_configuration.rx_frequency = 449900;
-            memcpy(shared.astrodev_tx.tcv_configuration.ax25_source, "SOURCE", 6);
-            memcpy(shared.astrodev_tx.tcv_configuration.ax25_destination, "DESTIN", 6);
-            memcpy(&message.payload[0], &shared.astrodev_tx.tcv_configuration, sizeof(shared.astrodev_tx.tcv_configuration));
-            fake_transmit(message, sizeof(shared.astrodev_tx.tcv_configuration));
-            
-            // Li3 switcher board radio initialization completes when this GETTCVCONFIG returns successfully
-            threads.delay(1000);
-            initialized = true;
-        }
-        break;
+    {
+        message.header.command = Astrodev::Command::GETTCVCONFIG;
+        message.header.sizehi = 0;
+        message.header.sizelo = sizeof(shared.astrodev_tx.tcv_configuration);
+        shared.astrodev_tx.tcv_configuration.interface_baud_rate = 0;
+        shared.astrodev_tx.tcv_configuration.power_amp_level = 220;
+        shared.astrodev_tx.tcv_configuration.rx_baud_rate = 1;
+        shared.astrodev_tx.tcv_configuration.tx_baud_rate = 1;
+        shared.astrodev_tx.tcv_configuration.ax25_preamble_length = 20;
+        shared.astrodev_tx.tcv_configuration.ax25_postamble_length = 20;
+        shared.astrodev_tx.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+        shared.astrodev_tx.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
+        shared.astrodev_tx.tcv_configuration.tx_frequency = 400800;
+        shared.astrodev_tx.tcv_configuration.rx_frequency = 449900;
+        memcpy(shared.astrodev_tx.tcv_configuration.ax25_source, "SOURCE", 6);
+        memcpy(shared.astrodev_tx.tcv_configuration.ax25_destination, "DESTIN", 6);
+        memcpy(&message.payload[0], &shared.astrodev_tx.tcv_configuration, sizeof(shared.astrodev_tx.tcv_configuration));
+        fake_transmit(message, sizeof(shared.astrodev_tx.tcv_configuration));
+
+        // Li3 switcher board radio initialization completes when this GETTCVCONFIG returns successfully
+        threads.delay(1000);
+        initialized = true;
+    }
+    break;
     case Astrodev::Command::SETTCVCONFIG:
-        {
-            message.header.command = Astrodev::Command::SETTCVCONFIG;
-            message.header.sizehi = 0x0a;
-            message.header.sizelo = 0x0a;
-            fake_transmit(message, 0);
-        }
-        break;
+    {
+        message.header.command = Astrodev::Command::SETTCVCONFIG;
+        message.header.sizehi = 0x0a;
+        message.header.sizelo = 0x0a;
+        fake_transmit(message, 0);
+    }
+    break;
     default:
         Serial.println("Command type not handled or implemented. Exiting...");
         break;
@@ -208,11 +204,11 @@ int32_t fake_transmit(Astrodev::frame &message, uint8_t size)
         uint16_t cs;
         uint8_t csb[2];
     };
-    cs = shared.astrodev_tx.CalcCS(&message.preamble[2], 6+message.header.sizelo);
+    cs = shared.astrodev_tx.CalcCS(&message.preamble[2], 6 + message.header.sizelo);
     message.payload[message.header.sizelo] = csb[0];
-    message.payload[message.header.sizelo+1] = csb[1];
+    message.payload[message.header.sizelo + 1] = csb[1];
 
-    for (uint16_t i=0; i<message.header.sizelo+2; i++)
+    for (uint16_t i = 0; i < message.header.sizelo + 2; i++)
     {
         HWSERIAL.write(message.payload[i]);
     }
@@ -240,18 +236,18 @@ int32_t fake_transmit(Cosmos::Support::PacketComm &packet)
     }
 
     memcpy(&tmessage.payload[0], packet.wrapped.data(), packet.wrapped.size());
-    
+
     return fake_transmit(tmessage, packet.wrapped.size());
 }
 
 // Send a test packet from the "ground" to the iobc
 void send_test_transmit_packet()
 {
-    packet.header.type = PacketComm::TypeId::CommandPing;
+    packet.header.type = PacketComm::TypeId::CommandObcPing;
     packet.header.nodeorig = GROUND_NODE_ID;
     packet.header.nodedest = IOBC_NODE_ID;
-    packet.header.chandest = 0;
-    packet.header.chanorig = 0;
+    packet.header.chanout = 0;
+    packet.header.chanin = 0;
     const size_t REPEAT = 124;
     // ascend from 0 to REPEAT-1, then last 4 bytes is packet number
     packet.data.resize(REPEAT + sizeof(send_counter));
@@ -259,7 +255,7 @@ void send_test_transmit_packet()
     {
         packet.data[i] = i & 0xFF;
     }
-    memcpy(packet.data.data()+REPEAT, &send_counter, sizeof(send_counter));
+    memcpy(packet.data.data() + REPEAT, &send_counter, sizeof(send_counter));
     iretn = packet.Wrap();
     if (iretn)
     {
@@ -272,7 +268,7 @@ void send_test_transmit_packet()
         Serial.println(packet.wrapped.size());
         char msg[4];
         Serial.print("wrapped: ");
-        for (uint16_t i=0; i<packet.wrapped.size(); i++)
+        for (uint16_t i = 0; i < packet.wrapped.size(); i++)
         {
             sprintf(msg, "0x%02X", packet.wrapped[i]);
             Serial.print(msg);
