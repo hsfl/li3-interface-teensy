@@ -12,7 +12,7 @@ shared_resources::shared_resources(HardwareSerial& hwserial) : IobcSerial(&hwser
     SLIPIobcSerial.flush();
 }
 
-int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSerial* hw_serial_tx, uint32_t baud_rate)
+int32_t shared_resources::init_rx_radio(HardwareSerial* hw_serial_rx, uint32_t baud_rate)
 {
     using namespace Lithium3;
     int32_t iretn = 0;
@@ -28,6 +28,15 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSeri
     }
     Serial.println("RX Initialization success");
     BlinkPattern(ProgramState::RADIO_RX_INIT_SUCCESS);
+    set_rx_radio_initialized_state(true);
+
+    return 0;
+}
+
+int32_t shared_resources::init_tx_radio(HardwareSerial* hw_serial_tx, uint32_t baud_rate)
+{
+    using namespace Lithium3;
+    int32_t iretn = 0;
     Serial.println("Initializing TX");
     BlinkPattern(ProgramState::RADIO_TX_ATTEMPT_INIT);
     iretn = init_radio(astrodev_tx, hw_serial_tx, baud_rate, 400800, 400800);
@@ -40,8 +49,9 @@ int32_t shared_resources::init_radios(HardwareSerial* hw_serial_rx, HardwareSeri
     }
     Serial.println("TX Initialization success");
     BlinkPattern(ProgramState::RADIO_TX_INIT_SUCCESS);
-    Serial.println("RX and TX successfully initialized!");
-    BlinkPattern(ProgramState::INIT_SUCCESSFUL);
+    set_tx_radio_initialized_state(true);
+    // Serial.println("RX and TX successfully initialized!");
+    // BlinkPattern(ProgramState::INIT_SUCCESSFUL);
 
     return 0;
 }
@@ -67,7 +77,7 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
         return -1;
     }
     astrodev.tcv_configuration.interface_baud_rate = 0;
-    astrodev.tcv_configuration.power_amp_level = 140;
+    astrodev.tcv_configuration.power_amp_level = 100;
     astrodev.tcv_configuration.rx_baud_rate = 1;
     astrodev.tcv_configuration.tx_baud_rate = 1;
     astrodev.tcv_configuration.ax25_preamble_length = 20;
@@ -108,7 +118,7 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
     }
     Serial.print("Checking config settings... ");
     if (astrodev.tcv_configuration.interface_baud_rate != 0 ||
-    astrodev.tcv_configuration.power_amp_level != 140 ||
+    astrodev.tcv_configuration.power_amp_level != 100 ||
     astrodev.tcv_configuration.rx_baud_rate != 1 ||
     astrodev.tcv_configuration.tx_baud_rate != 1 ||
     astrodev.tcv_configuration.ax25_preamble_length != 20||
@@ -150,22 +160,42 @@ void shared_resources::push_queue(std::deque<Cosmos::Support::PacketComm>& queue
   queue.push_back(packet);
 }
 
-void shared_resources::set_radios_initialized_state(bool state)
+void shared_resources::set_rx_radio_initialized_state(bool state)
 {
-    radios_initialized = state;
+    rx_radio_initialized = state;
 }
 
-bool shared_resources::get_radios_initialized_state()
+void shared_resources::set_tx_radio_initialized_state(bool state)
 {
-    return radios_initialized;
+    tx_radio_initialized = state;
 }
 
-void shared_resources::set_radios_threads_started(bool state)
+bool shared_resources::get_rx_radio_initialized_state()
 {
-    radio_threads_started = state;
+    return rx_radio_initialized;
 }
 
-bool shared_resources::get_radios_threads_started()
+bool shared_resources::get_tx_radio_initialized_state()
 {
-    return radio_threads_started;
+    return tx_radio_initialized;
+}
+
+void shared_resources::set_rx_radio_thread_started(bool state)
+{
+    rx_radio_thread_started = state;
+}
+
+void shared_resources::set_tx_radio_thread_started(bool state)
+{
+    tx_radio_thread_started = state;
+}
+
+bool shared_resources::get_rx_radio_thread_started()
+{
+    return rx_radio_thread_started;
+}
+
+bool shared_resources::get_tx_radio_thread_started()
+{
+    return tx_radio_thread_started;
 }

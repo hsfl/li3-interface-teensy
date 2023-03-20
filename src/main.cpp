@@ -62,7 +62,7 @@ void setup()
 void loop()
 {
     // Initialize radios if it they are not yet
-    if (!shared.get_radios_initialized_state())
+    if (!shared.get_rx_radio_initialized_state() || !shared.get_tx_radio_initialized_state())
     {
         initialize_radios();
         threads.delay(10);
@@ -155,24 +155,29 @@ void handle_main_queue_packets()
 
 void initialize_radios()
 {
-    // Initialize the astrodev radio
-    iretn = shared.init_radios(&Serial5, &Serial2, ASTRODEV_BAUD);
-    if (iretn < 0)
-    {
-        return;
-    }
+    // Initialize the astrodev radios
+
     // Start send/receive loops
     // Do it only once
-    if (!shared.get_radios_threads_started())
+    if (!shared.get_rx_radio_thread_started())
     {
-        threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-        threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
-        threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-        // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
-        shared.set_radios_threads_started(true);
+        if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
+        {
+            threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
+            shared.set_rx_radio_thread_started(true);
+        }
     }
-    shared.set_radios_initialized_state(true);
-    Serial.println("Radio init successful");
+    if (!shared.get_tx_radio_thread_started())
+    {
+        if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
+        {
+            threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+            threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+            // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
+            shared.set_tx_radio_thread_started(true);
+        }
+    }
+    // Serial.println("Radio init successful");
 }
 
 void get_temp_sensor_measurements()
@@ -184,12 +189,30 @@ void get_temp_sensor_measurements()
     }
     temp_timer = 0;
 
+    // Stick temp measurements under special kind of CommandRadioAstrodevCommunicate packet
+    // Byte 0 = Unit (0)
+    // Byte 1 = doesn't matter
+    // Byte 2 = 253
+    // Byte 3-4 = Number of response bytes (8)
+    // Byte 5-8  = TSEN 0 temp (iX5 heat sink +y)
+    // Byte 9-12 = TSEN 1 temp (iX5 heat sink -y)
+    packet.header.type = PacketComm::TypeId::CommandRadioAstrodevCommunicate;
+    packet.header.nodeorig = IOBC_NODE_ID;
+    packet.header.nodedest = IOBC_NODE_ID;
+    packet.data.resize(CMD_HEADER_SIZE+sizeof(float)*NUM_TSENS);
+    packet.data[0] = 0;
+    packet.data[1] = 0;
+    packet.data[2] = TLM_TSENS;
+    packet.data[3] = 8;
+    packet.data[4] = 0;
+
     // AD590MF temp sensor
     pinMode(AD590MF_TEMP_PIN, INPUT);
     analogReadResolution(10);
     // Get measurements for each of the 8 temp sensors
     // The connected sensor is selected by turning 3 bits/pins hi or lo
-    for (uint8_t i=0; i < 8; ++i)
+    // Only sensors 0 and 1 are connected
+    for (uint8_t i=0; i < NUM_TSENS; ++i)
     {
         // Measurement for temp sensor n: 0000 0cba
         uint8_t a_out = i & 0x1;
@@ -210,8 +233,11 @@ void get_temp_sensor_measurements()
         // Temp (K) = I (uA) = V/R * 1000000
         float kelvin = volt / .00777;
         Serial.println(kelvin-273.15);
+        memcpy(&packet.data[CMD_HEADER_SIZE+i*sizeof(kelvin)], &kelvin, sizeof(kelvin));
     }
     pinMode(AD590MF_TEMP_PIN, INPUT_DISABLE);
+
+    shared.push_queue(shared.main_queue, shared.main_lock, packet);
     
     delay(1000);
 }

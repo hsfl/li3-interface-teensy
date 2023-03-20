@@ -28,7 +28,8 @@ public:
     Cosmos::Devices::Radios::Astrodev astrodev_rx;
     Cosmos::Devices::Radios::Astrodev astrodev_tx;
     //! Initializes RX and TX Astrodev radios
-    int32_t init_radios(HardwareSerial* hw_serial_rx, HardwareSerial* hw_serial_tx, uint32_t baud_rate);
+    int32_t init_rx_radio(HardwareSerial* hw_serial_rx,uint32_t baud_rate);
+    int32_t init_tx_radio(HardwareSerial* hw_serial_tx, uint32_t baud_rate);
     int32_t connect_radio(Cosmos::Devices::Radios::Astrodev& astrodev, uint32_t tx_freq, uint32_t rx_freq);
 
     // See if these can't be replaced by 2D arrays
@@ -50,16 +51,22 @@ public:
     // Keep track of state of burnwire
     uint8_t burnwire_state = HIGH;
 
-    void set_radios_initialized_state(bool state);
-    bool get_radios_initialized_state();
-    void set_radios_threads_started(bool state);
-    bool get_radios_threads_started();
+    void set_rx_radio_initialized_state(bool state);
+    void set_tx_radio_initialized_state(bool state);
+    bool get_rx_radio_initialized_state();
+    bool get_tx_radio_initialized_state();
+    void set_rx_radio_thread_started(bool state);
+    void set_tx_radio_thread_started(bool state);
+    bool get_rx_radio_thread_started();
+    bool get_tx_radio_thread_started();
 private:
     int32_t init_radio(Cosmos::Devices::Radios::Astrodev &astrodev, HardwareSerial* hw_serial, uint32_t baud_rate, uint32_t tx_freq, uint32_t rx_freq);
     // Keep track of whether radio initialization state
-    bool radios_initialized = false;
+    bool rx_radio_initialized = false;
+    bool tx_radio_initialized = false;
     // Only start radio threads once
-    bool radio_threads_started = false;
+    bool rx_radio_thread_started = false;
+    bool tx_radio_thread_started = false;
 };
 
 #endif

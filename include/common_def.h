@@ -29,4 +29,13 @@
 #define RESTART_ADDR       0xE000ED0C
 #define WRITE_RESTART(val) ((*(volatile uint32_t *)RESTART_ADDR) = (val))
 
+// Number of thermal sensors attached to teensy
+#define NUM_TSENS 2
+
+// Special internal command ids
+#define CMD_HEADER_SIZE 5
+#define TLM_TSENS 253
+#define CMD_BURNWIRE 254
+#define CMD_REBOOT 255
+
 #endif

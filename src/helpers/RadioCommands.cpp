@@ -3,6 +3,11 @@
 // Global shared defined in main.cpp
 extern shared_resources shared;
 
+// Args:
+// Byte 0 = Unit (doesn't matter)
+// Byte 1 = doesn't matter
+// Byte 2 = 255
+// Byte 3-4 = Number of response bytes (0)
 void Reboot()
 {
     Serial.println("Got Reboot command. Restarting...");
@@ -76,64 +81,65 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
         !packet.data[0] ? shared.astrodev_rx.GetTelemetry(false) : shared.astrodev_tx.GetTelemetry(false);
         break;
     case 9: // Set TCV Config
-        Cosmos::Devices::Radios::Astrodev *astrodev;
-        !packet.data[0] ? astrodev = &shared.astrodev_rx : astrodev = &shared.astrodev_tx;
-
-        if (packet.data.size() < 11)
         {
-            return;
-        }
+            Cosmos::Devices::Radios::Astrodev *astrodev;
+            !packet.data[0] ? astrodev = &shared.astrodev_rx : astrodev = &shared.astrodev_tx;
 
-        astrodev->tcv_configuration.interface_baud_rate = packet.data[5];
-        astrodev->tcv_configuration.power_amp_level = packet.data[6];
-        astrodev->tcv_configuration.rx_baud_rate = packet.data[7];
-        astrodev->tcv_configuration.tx_baud_rate = packet.data[8];
-        astrodev->tcv_configuration.ax25_preamble_length = packet.data[9];
-        astrodev->tcv_configuration.ax25_postamble_length = packet.data[10];
-
-        int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
-
-        while ((iretn = astrodev->SetTCVConfig()) < 0)
-        {
-            Serial.println("Resetting");
-            astrodev->Reset();
-            Serial.println("Failed to settcvconfig astrodev");
-            if (--retries < 0)
+            if (packet.data.size() < 11)
             {
                 return;
             }
-            threads.delay(5000);
-        }
-        Serial.println("SetTCVConfig successful");
 
-        retries = RADIO_INIT_CONNECT_ATTEMPTS;
-        while ((iretn = astrodev->GetTCVConfig()) < 0)
-        {
-            Serial.println("Failed to gettcvconfig astrodev");
-            if (--retries < 0)
+            astrodev->tcv_configuration.interface_baud_rate = packet.data[5];
+            astrodev->tcv_configuration.power_amp_level = packet.data[6];
+            astrodev->tcv_configuration.rx_baud_rate = packet.data[7];
+            astrodev->tcv_configuration.tx_baud_rate = packet.data[8];
+            astrodev->tcv_configuration.ax25_preamble_length = packet.data[9];
+            astrodev->tcv_configuration.ax25_postamble_length = packet.data[10];
+
+            int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
+
+            while ((iretn = astrodev->SetTCVConfig()) < 0)
             {
+                Serial.println("Resetting");
+                astrodev->Reset();
+                Serial.println("Failed to settcvconfig astrodev");
+                if (--retries < 0)
+                {
+                    return;
+                }
+                threads.delay(5000);
+            }
+            Serial.println("SetTCVConfig successful");
+
+            retries = RADIO_INIT_CONNECT_ATTEMPTS;
+            while ((iretn = astrodev->GetTCVConfig()) < 0)
+            {
+                Serial.println("Failed to gettcvconfig astrodev");
+                if (--retries < 0)
+                {
+                    return;
+                }
+                threads.delay(5000);
+            }
+            Serial.print("Checking config settings... ");
+            if (astrodev->tcv_configuration.interface_baud_rate != packet.data[5] ||
+                astrodev->tcv_configuration.power_amp_level != packet.data[6] ||
+                astrodev->tcv_configuration.rx_baud_rate != packet.data[7] ||
+                astrodev->tcv_configuration.tx_baud_rate != packet.data[8] ||
+                astrodev->tcv_configuration.ax25_preamble_length != packet.data[9] ||
+                astrodev->tcv_configuration.ax25_postamble_length != packet.data[10])
+            {
+                Serial.println("config mismatch detected!");
                 return;
             }
-            threads.delay(5000);
+            Serial.println("config check OK!");
         }
-        Serial.print("Checking config settings... ");
-        if (astrodev->tcv_configuration.interface_baud_rate != packet.data[5] ||
-            astrodev->tcv_configuration.power_amp_level != packet.data[6] ||
-            astrodev->tcv_configuration.rx_baud_rate != packet.data[7] ||
-            astrodev->tcv_configuration.tx_baud_rate != packet.data[8] ||
-            astrodev->tcv_configuration.ax25_preamble_length != packet.data[9] ||
-            astrodev->tcv_configuration.ax25_postamble_length != packet.data[10])
-        {
-            Serial.println("config mismatch detected!");
-            return;
-        }
-        Serial.println("config check OK!");
-
         break;
-    case 254:
+    case CMD_BURNWIRE:
         SetBurnwire(packet);
         break;
-    case 255:
+    case CMD_REBOOT:
         Reboot();
         break;
     default:

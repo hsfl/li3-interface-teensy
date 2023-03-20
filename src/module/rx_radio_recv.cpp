@@ -81,6 +81,10 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
         packet.header.nodeorig = IOBC_NODE_ID;
         packet.header.nodedest = IOBC_NODE_ID;
         packet.data.resize(msg.header.sizelo + 4);
+        // Byte 0 = Unit (0)
+        // Byte 1 = CMD in or out
+        // Byte 2 = Astrodev cmd id
+        // Byte 3 = Number of response bytes
         packet.data[0] = LI3RX;
         packet.data[1] = 0x20;
         packet.data[2] = (uint8_t)msg.header.command;
@@ -118,8 +122,8 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
         Serial.print("cmd ");
         Serial.print((uint16_t)msg.header.command);
         Serial.println(" not (yet) handled. Terminating...");
-        exit(-1);
-        break;
+        // exit(-1);
+        return;
     }
 #ifdef DEBUG_PRINT
     Serial.print("pushing to main queue, cmd ");
