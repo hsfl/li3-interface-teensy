@@ -193,9 +193,9 @@ void get_temp_sensor_measurements()
     // Byte 0 = Unit (0)
     // Byte 1 = doesn't matter
     // Byte 2 = 253
-    // Byte 3-4 = Number of response bytes (8)
-    // Byte 5-8  = TSEN 0 temp (iX5 heat sink +y)
-    // Byte 9-12 = TSEN 1 temp (iX5 heat sink -y)
+    // Byte 3 = Number of response bytes (8)
+    // Byte 4-7  = TSEN 0 temp (iX5 heat sink +y)
+    // Byte 8-11 = TSEN 1 temp (iX5 heat sink -y)
     packet.header.type = PacketComm::TypeId::CommandRadioAstrodevCommunicate;
     packet.header.nodeorig = IOBC_NODE_ID;
     packet.header.nodedest = IOBC_NODE_ID;
@@ -204,7 +204,6 @@ void get_temp_sensor_measurements()
     packet.data[1] = 0;
     packet.data[2] = TLM_TSENS;
     packet.data[3] = 8;
-    packet.data[4] = 0;
 
     // AD590MF temp sensor
     pinMode(AD590MF_TEMP_PIN, INPUT);

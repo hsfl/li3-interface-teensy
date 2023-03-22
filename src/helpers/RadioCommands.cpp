@@ -7,7 +7,7 @@ extern shared_resources shared;
 // Byte 0 = Unit (doesn't matter)
 // Byte 1 = doesn't matter
 // Byte 2 = 255
-// Byte 3-4 = Number of response bytes (0)
+// Byte 3 = Number of response bytes (0)
 void Reboot()
 {
     Serial.println("Got Reboot command. Restarting...");
@@ -19,9 +19,9 @@ void Reboot()
 // Byte 0 = Unit (doesn't matter)
 // Byte 1 = doesn't matter
 // Byte 2 = 254
-// Byte 3-4 = Number of response bytes (0)
-// Byte 5 = HIGH (1) or LOW (0)
-// Byte 6 = Time (s) to keep on (Optional, default 0)
+// Byte 3 = Number of response bytes (0)
+// Byte 4 = HIGH (1) or LOW (0)
+// Byte 5 = Time (s) to keep on (Optional, default 0)
 void SetBurnwire(const Cosmos::Support::PacketComm &packet)
 {
     if (packet.data.size() < 5)
@@ -62,12 +62,12 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
     // Args:
     // Byte 0 = Unit
     // Byte 1-2 = Command
-    // Bytes 3-4 = Number of response bytes
-    // Byte 5 - (N-1) = Bytes
+    // Bytes 3 = Number of response bytes
+    // Byte 4 - (N-1) = Bytes
     //
     // Unit:
     // - 0 is rx radio, 1 is tx radio
-    if (packet.data.size() < 3)
+    if (packet.data.size() < 4)
     {
         return;
     }
