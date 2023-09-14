@@ -54,6 +54,7 @@ void setup()
     // TODO: determine more appropriate stack size
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
 
+    Serial.println("This version was flashed on: 09/14/23");
     Serial.println("Setup complete");
 
 }
@@ -107,6 +108,10 @@ void handle_main_queue_packets()
                 // These packets are intended for this program, handle here
                 if (packet.header.nodedest == LI3TEENSY_ID || packet.header.nodeorig == GROUND_NODE_ID)
                 {
+                    Serial.print("Calling RadioCommand for unit ");
+                    Serial.print(packet.data[0]);
+                    Serial.print(" type:");
+                    Serial.println(packet.data[2]);
                     Lithium3::RadioCommand(packet);
                 }
                 // These are our periodic telem grabbing responses, send to iobc

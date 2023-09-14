@@ -75,6 +75,7 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
 #ifndef MOCK_TESTING
     case Astrodev::Command::NOOP:
     case Astrodev::Command::GETTCVCONFIG:
+    case Astrodev::Command::SETTCVCONFIG:
     case Astrodev::Command::TELEMETRY:
         // Setup PacketComm packet stuff
         packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
@@ -104,6 +105,8 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
             Serial.println("Unwrap fail in RX radio recv");
             return;
         }
+        // Serial.print("rx unwrap successful, type: ");
+        // Serial.println(static_cast<uint16_t>(packet.header.type));
         break;
 #else
     // These cases here are for faking a radio interaction.
@@ -119,7 +122,7 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
         break;
 #endif
     default:
-        Serial.print("cmd ");
+        Serial.print("rx: cmd ");
         Serial.print((uint16_t)msg.header.command);
         Serial.println(" not (yet) handled. Terminating...");
         // exit(-1);

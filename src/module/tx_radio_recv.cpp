@@ -67,6 +67,7 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
 #ifndef MOCK_TESTING
             case Astrodev::Command::NOOP:
             case Astrodev::Command::GETTCVCONFIG:
+            case Astrodev::Command::SETTCVCONFIG:
             case Astrodev::Command::TELEMETRY:
                 // Setup PacketComm packet stuff
                 packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
@@ -110,7 +111,7 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
             
 #endif
             default:
-                Serial.print("cmd ");
+                Serial.print("tx recv: cmd ");
                 Serial.print((uint16_t)cmd);
                 Serial.println(" not (yet) handled. Terminating...");
                 exit(-1);

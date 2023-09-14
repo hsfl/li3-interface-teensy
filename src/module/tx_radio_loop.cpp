@@ -122,7 +122,7 @@ void Cosmos::Module::Radio_interface::handle_tx_recv(const Astrodev::frame& msg)
     
 #endif
     default:
-        Serial.print("cmd ");
+        Serial.print("tx: cmd ");
         Serial.print((uint16_t)msg.header.command);
         Serial.println(" not (yet) handled. Terminating...");
         exit(-1);

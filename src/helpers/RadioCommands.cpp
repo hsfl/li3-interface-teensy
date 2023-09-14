@@ -80,7 +80,7 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
     case 7: // Get Telemetry
         !packet.data[0] ? shared.astrodev_rx.GetTelemetry(false) : shared.astrodev_tx.GetTelemetry(false);
         break;
-    case 9: // Set TCV Config
+    case 6: // Set TCV Config
         {
             Cosmos::Devices::Radios::Astrodev *astrodev;
             !packet.data[0] ? astrodev = &shared.astrodev_rx : astrodev = &shared.astrodev_tx;
@@ -90,16 +90,13 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                 return;
             }
 
-            astrodev->tcv_configuration.interface_baud_rate = packet.data[5];
-            astrodev->tcv_configuration.power_amp_level = packet.data[6];
-            astrodev->tcv_configuration.rx_baud_rate = packet.data[7];
-            astrodev->tcv_configuration.tx_baud_rate = packet.data[8];
-            astrodev->tcv_configuration.ax25_preamble_length = packet.data[9];
-            astrodev->tcv_configuration.ax25_postamble_length = packet.data[10];
+            memcpy(&astrodev->tcv_configuration, &packet.data[4], sizeof(astrodev->tcv_configuration));
+            Serial.print("power level ");
+            Serial.println(unsigned(astrodev->tcv_configuration.power_amp_level));
 
             int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
 
-            while ((iretn = astrodev->SetTCVConfig()) < 0)
+            while ((iretn = astrodev->SetTCVConfig(false)) < 0)
             {
                 Serial.println("Resetting");
                 astrodev->Reset();
@@ -110,30 +107,30 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                 }
                 threads.delay(5000);
             }
-            Serial.println("SetTCVConfig successful");
+            // Serial.println("SetTCVConfig successful");
 
-            retries = RADIO_INIT_CONNECT_ATTEMPTS;
-            while ((iretn = astrodev->GetTCVConfig()) < 0)
-            {
-                Serial.println("Failed to gettcvconfig astrodev");
-                if (--retries < 0)
-                {
-                    return;
-                }
-                threads.delay(5000);
-            }
-            Serial.print("Checking config settings... ");
-            if (astrodev->tcv_configuration.interface_baud_rate != packet.data[5] ||
-                astrodev->tcv_configuration.power_amp_level != packet.data[6] ||
-                astrodev->tcv_configuration.rx_baud_rate != packet.data[7] ||
-                astrodev->tcv_configuration.tx_baud_rate != packet.data[8] ||
-                astrodev->tcv_configuration.ax25_preamble_length != packet.data[9] ||
-                astrodev->tcv_configuration.ax25_postamble_length != packet.data[10])
-            {
-                Serial.println("config mismatch detected!");
-                return;
-            }
-            Serial.println("config check OK!");
+            // retries = RADIO_INIT_CONNECT_ATTEMPTS;
+            // while ((iretn = astrodev->GetTCVConfig()) < 0)
+            // {
+            //     Serial.println("Failed to gettcvconfig astrodev");
+            //     if (--retries < 0)
+            //     {
+            //         return;
+            //     }
+            //     threads.delay(5000);
+            // }
+            // Serial.print("Checking config settings... ");
+            // if (astrodev->tcv_configuration.interface_baud_rate != packet.data[5] ||
+            //     astrodev->tcv_configuration.power_amp_level != packet.data[6] ||
+            //     astrodev->tcv_configuration.rx_baud_rate != packet.data[7] ||
+            //     astrodev->tcv_configuration.tx_baud_rate != packet.data[8] ||
+            //     astrodev->tcv_configuration.ax25_preamble_length != packet.data[9] ||
+            //     astrodev->tcv_configuration.ax25_postamble_length != packet.data[10])
+            // {
+            //     Serial.println("config mismatch detected!");
+            //     return;
+            // }
+            // Serial.println("config check OK!");
         }
         break;
     case CMD_BURNWIRE:
