@@ -88,7 +88,9 @@ void Cosmos::Module::Radio_interface::send_packet()
         if (!shared.astrodev_tx.buffer_full.load())
         {
             // Attempt transmit if transfer bull is not full
-            iretn = shared.astrodev_tx.Transmit(packet);
+            // Packets in the send buffer should only be coming straight from the iobc,
+            // that are assumed to be encrypted (i.e., already wrapped)
+            iretn = shared.astrodev_tx.Transmit(packet.wrapped);
             Serial.print("Transmit iretn: ");
             Serial.println(iretn);
             if (iretn < 0)

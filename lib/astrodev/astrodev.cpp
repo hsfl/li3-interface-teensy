@@ -145,23 +145,16 @@ namespace Cosmos {
             }
 
             // Send out a PacketComm packet
-            int32_t Astrodev::Transmit(Cosmos::Support::PacketComm &packet)
+            int32_t Astrodev::Transmit(const vector<uint8_t>& bytes)
             {
-                // Apply packetcomm protocol wrapping
-                int32_t iretn = packet.Wrap();
-                if (iretn < 0)
-                {
-                    return iretn;
-                }
-
                 tmessage.header.command = Command::TRANSMIT;
-                tmessage.header.sizelo = packet.wrapped.size();
+                tmessage.header.sizelo = bytes.size();
                 if (tmessage.header.sizelo > MTU)
                 {
                     return GENERAL_ERROR_BAD_SIZE;
                 }
 
-                memcpy(&tmessage.payload[0], packet.wrapped.data(), packet.wrapped.size());
+                memcpy(&tmessage.payload[0], bytes.data(), bytes.size());
                 
                 return Transmit(tmessage);
             }

@@ -44,13 +44,20 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
             continue;
         }
         threads.yield();
-        // Since this is an intermediate step, don't bother with crc check
+
         iretn = packet.Unwrap(true);
+
+        // Unwrap failure may indicate that this is an encrypted packet for the ground
         if (iretn < 0)
         {
-            Serial.println("Unwrap error");
+            Serial.println("Unwrap error, forwarding to ground.");
+            packet.header.nodeorig = IOBC_NODE_ID;
+            packet.header.nodedest = GROUND_NODE_ID;
+            packet.header.type = Cosmos::Support::PacketComm::TypeId::Blank;
+            shared.push_queue(shared.send_queue, shared.send_lock, packet);
             continue;
         }
+
         // Forward to appropriate queue
         switch(packet.header.nodedest)
         {

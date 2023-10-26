@@ -54,7 +54,7 @@ void setup()
     // TODO: determine more appropriate stack size
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
 
-    Serial.println("This version was flashed on: 09/14/23");
+    Serial.println("This version was flashed on: 10/25/23");
     Serial.println("Setup complete");
 
 }
@@ -63,7 +63,7 @@ void setup()
 void loop()
 {
     // Initialize radios if it they are not yet
-    if (!shared.get_rx_radio_initialized_state() || !shared.get_tx_radio_initialized_state())
+    if (/*!shared.get_rx_radio_initialized_state() ||*/ !shared.get_tx_radio_initialized_state())
     {
         initialize_radios();
         threads.delay(10);
@@ -101,12 +101,24 @@ void handle_main_queue_packets()
         Serial.println();
 #endif
         using namespace Cosmos::Support;
+
+        // If an encrypted packet came from the ground, forward straight to iobc
+        // This will have come from rx_radio_recv.cpp
+        if (packet.header.type == PacketComm::TypeId::Blank && packet.header.nodeorig == GROUND_NODE_ID)
+        {
+            Serial.println("Forwarding encrypted packet from ground to iobc");
+            shared.SLIPIobcSerial.beginPacket();
+            shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
+            shared.SLIPIobcSerial.endPacket();
+            return;
+        }
+
         switch(packet.header.type)
         {
         case PacketComm::TypeId::CommandRadioAstrodevCommunicate:
             {
                 // These packets are intended for this program, handle here
-                if (packet.header.nodedest == LI3TEENSY_ID || packet.header.nodeorig == GROUND_NODE_ID)
+                if (packet.header.nodedest == LI3TEENSY_ID)
                 {
                     Serial.print("Calling RadioCommand for unit ");
                     Serial.print(packet.data[0]);
@@ -115,7 +127,7 @@ void handle_main_queue_packets()
                     Lithium3::RadioCommand(packet);
                 }
                 // These are our periodic telem grabbing responses, send to iobc
-                else if (packet.header.nodeorig == IOBC_NODE_ID)
+                else if (packet.header.nodeorig == IOBC_NODE_ID && packet.header.nodedest == IOBC_NODE_ID)
                 {
                     Serial.print("Got radio communicate response unit:");
                     Serial.print(packet.data[0]);
@@ -164,14 +176,14 @@ void initialize_radios()
 
     // Start send/receive loops
     // Do it only once
-    if (!shared.get_rx_radio_thread_started())
-    {
-        if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
-        {
-            threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-            shared.set_rx_radio_thread_started(true);
-        }
-    }
+    // if (!shared.get_rx_radio_thread_started())
+    // {
+    //     if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
+    //     {
+    //         threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
+    //         shared.set_rx_radio_thread_started(true);
+    //     }
+    // }
     if (!shared.get_tx_radio_thread_started())
     {
         if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)

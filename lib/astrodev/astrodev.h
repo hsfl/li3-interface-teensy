@@ -247,7 +247,7 @@ namespace Cosmos {
                 int32_t GetTelemetry(bool get_response);
                 int32_t SetRFConfig(rf_config config);
                 int32_t Transmit(frame &message);
-                int32_t Transmit(Cosmos::Support::PacketComm &packet);
+                int32_t Transmit(const vector<uint8_t>& bytes);
                 int32_t Receive(frame &message);
                 uint16_t CalcCS(uint8_t *data, uint16_t size);
 
