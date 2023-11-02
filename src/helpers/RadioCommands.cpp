@@ -72,11 +72,6 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
         return;
     }
 
-    // Don't handle RX for now
-    if (packet.data[0] == 0)
-    {
-        return;
-    }
 
     switch (packet.data[2])
     {

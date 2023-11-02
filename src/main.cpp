@@ -63,7 +63,7 @@ void setup()
 void loop()
 {
     // Initialize radios if it they are not yet
-    if (/*!shared.get_rx_radio_initialized_state() ||*/ !shared.get_tx_radio_initialized_state())
+    if (!shared.get_rx_radio_initialized_state() || !shared.get_tx_radio_initialized_state())
     {
         initialize_radios();
         threads.delay(10);
@@ -176,14 +176,14 @@ void initialize_radios()
 
     // Start send/receive loops
     // Do it only once
-    // if (!shared.get_rx_radio_thread_started())
-    // {
-    //     if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
-    //     {
-    //         threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-    //         shared.set_rx_radio_thread_started(true);
-    //     }
-    // }
+    if (!shared.get_rx_radio_thread_started())
+    {
+        if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
+        {
+            threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
+            shared.set_rx_radio_thread_started(true);
+        }
+    }
     if (!shared.get_tx_radio_thread_started())
     {
         if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
