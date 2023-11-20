@@ -25,6 +25,7 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
     while (true)
     {
         threads.delay(10);
+        Threads::Scope lock(shared.tx_lock);
 
         if (tx_telem_timer > 20000)
         {

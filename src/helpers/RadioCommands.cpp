@@ -91,47 +91,78 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                 return;
             }
 
-            memcpy(&astrodev->tcv_configuration, &packet.data[4], sizeof(astrodev->tcv_configuration));
+            // Assuming here that only the tx radio will have its settings changed
+            Threads::Scope lock(shared.tx_lock);
+
+            Cosmos::Devices::Radios::Astrodev::tcv_config new_tcv_config;
+            memcpy(&new_tcv_config, &packet.data[4], sizeof(new_tcv_config));
+            astrodev->tcv_configuration = new_tcv_config;
             Serial.print("power level ");
-            Serial.println(unsigned(astrodev->tcv_configuration.power_amp_level));
+            Serial.println(unsigned(new_tcv_config.power_amp_level));
 
             int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
-
-            while ((iretn = astrodev->SetTCVConfig(false)) < 0)
+            while(true)
             {
-                Serial.println("Resetting");
-                astrodev->Reset();
-                Serial.println("Failed to settcvconfig astrodev");
-                if (--retries < 0)
+                while ((iretn = astrodev->SetTCVConfig()) < 0)
                 {
-                    return;
+                    Serial.println("Resetting");
+                    astrodev->Reset();
+                    Serial.println("Failed to settcvconfig astrodev");
+                    threads.delay(5000);
                 }
-                threads.delay(5000);
-            }
-            // Serial.println("SetTCVConfig successful");
+                Serial.println("SetTCVConfig successful");
 
-            // retries = RADIO_INIT_CONNECT_ATTEMPTS;
-            // while ((iretn = astrodev->GetTCVConfig()) < 0)
-            // {
-            //     Serial.println("Failed to gettcvconfig astrodev");
-            //     if (--retries < 0)
-            //     {
-            //         return;
-            //     }
-            //     threads.delay(5000);
-            // }
-            // Serial.print("Checking config settings... ");
-            // if (astrodev->tcv_configuration.interface_baud_rate != packet.data[5] ||
-            //     astrodev->tcv_configuration.power_amp_level != packet.data[6] ||
-            //     astrodev->tcv_configuration.rx_baud_rate != packet.data[7] ||
-            //     astrodev->tcv_configuration.tx_baud_rate != packet.data[8] ||
-            //     astrodev->tcv_configuration.ax25_preamble_length != packet.data[9] ||
-            //     astrodev->tcv_configuration.ax25_postamble_length != packet.data[10])
-            // {
-            //     Serial.println("config mismatch detected!");
-            //     return;
-            // }
-            // Serial.println("config check OK!");
+                while ((iretn = astrodev->GetTCVConfig()) < 0)
+                {
+                    Serial.println("Failed to gettcvconfig astrodev");
+                    threads.delay(5000);
+                }
+                Serial.print("Checking config settings... ");
+                if (astrodev->tcv_configuration.interface_baud_rate != new_tcv_config.interface_baud_rate
+                    || astrodev->tcv_configuration.power_amp_level  != new_tcv_config.power_amp_level
+                    || astrodev->tcv_configuration.rx_baud_rate     != new_tcv_config.rx_baud_rate
+                    || astrodev->tcv_configuration.tx_baud_rate     != new_tcv_config.tx_baud_rate
+                    || astrodev->tcv_configuration.ax25_preamble_length  != new_tcv_config.ax25_preamble_length
+                    || astrodev->tcv_configuration.ax25_postamble_length != new_tcv_config.ax25_postamble_length)
+                {
+                    Serial.println("config mismatch detected!");
+                    Serial.print("interface_baud_rate: ");
+                    Serial.print(unsigned(astrodev->tcv_configuration.interface_baud_rate));
+                    Serial.print(" | ");
+                    Serial.println(unsigned(new_tcv_config.interface_baud_rate));
+                    Serial.print("power_amp_level: ");
+                    Serial.print(unsigned(astrodev->tcv_configuration.power_amp_level));
+                    Serial.print(" | ");
+                    Serial.println(unsigned(new_tcv_config.power_amp_level));
+                    Serial.print("rx_baud_rate: ");
+                    Serial.print(unsigned(astrodev->tcv_configuration.rx_baud_rate));
+                    Serial.print(" | ");
+                    Serial.println(unsigned(new_tcv_config.rx_baud_rate));
+                    Serial.print("tx_baud_rate: ");
+                    Serial.print(unsigned(astrodev->tcv_configuration.tx_baud_rate));
+                    Serial.print(" | ");
+                    Serial.println(unsigned(new_tcv_config.tx_baud_rate));
+                    Serial.print("ax25_preamble_length: ");
+                    Serial.print(unsigned(astrodev->tcv_configuration.ax25_preamble_length));
+                    Serial.print(" | ");
+                    Serial.println(unsigned(new_tcv_config.ax25_preamble_length));
+                    Serial.print("ax25_postamble_length: ");
+                    Serial.print(unsigned(astrodev->tcv_configuration.ax25_postamble_length));
+                    Serial.print(" | ");
+                    Serial.println(unsigned(new_tcv_config.ax25_postamble_length));
+                    --retries;
+                }
+                else
+                {
+                    break;
+                }
+                if (retries < 0)
+                {
+                    // Reboot if encountering excessive difficulty
+                    WRITE_RESTART(0x5FA0004);
+                }
+            }
+            Serial.println("config check OK!");
         }
         break;
     case CMD_BURNWIRE:

@@ -39,6 +39,9 @@ public:
     // Mutexes for accessing buffers
     Threads::Mutex send_lock;
     Threads::Mutex main_lock;
+    // Mutex to use when interacting with the TX radio. To be used when you need to shut off all other interactions
+    // with it until a new power amp config is set
+    Threads::Mutex tx_lock;
 
     // Buffer accessors
     int32_t pop_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, Cosmos::Support::PacketComm &packet);

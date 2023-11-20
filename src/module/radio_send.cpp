@@ -78,6 +78,7 @@ void Cosmos::Module::Radio_interface::send_loop()
 //! Send out a PacketComm packet with proper radio transmit buffer checks and retries
 void Cosmos::Module::Radio_interface::send_packet()
 {
+    Threads::Scope lock(shared.tx_lock);
     int32_t iretn = 0;
     uint8_t retries = 0;
     Serial.print(sentNum++);
