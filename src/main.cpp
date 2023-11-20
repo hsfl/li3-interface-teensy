@@ -2,7 +2,6 @@
 #include "helpers/RadioCommands.h"
 #include "module/radio_recv.h"
 #include "module/radio_send.h"
-#include "module/tx_radio_loop.h"
 #include "module/iobc_recv.h"
 #include "helpers/TestBlinker.h"
 
@@ -202,7 +201,6 @@ void initialize_radios()
             {
                 threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
                 threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-                // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
                 shared.set_tx_radio_thread_started(true);
             }
         }
