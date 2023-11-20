@@ -34,6 +34,10 @@ namespace
     int32_t iretn = 0;
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
+    // Join radio initialization thread after it finishes
+    bool radio_initialization_thread_joined = false;
+    // ID of the radio initialization thread, save to call join() later
+    int radio_initialization_thread_id = 0;
 }
 
 void setup()
@@ -53,6 +57,7 @@ void setup()
 
     // TODO: determine more appropriate stack size
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
+    radio_initialization_thread_id = threads.addThread(initialize_radios, 0, 1000);
 
     Serial.println("This version was flashed on: 10/25/23");
     Serial.println("Setup complete");
@@ -63,10 +68,16 @@ void setup()
 void loop()
 {
     // Initialize radios if it they are not yet
-    if (!shared.get_rx_radio_initialized_state() || !shared.get_tx_radio_initialized_state())
+    // if (!shared.get_rx_radio_initialized_state() || !shared.get_tx_radio_initialized_state())
+    // {
+    //     initialize_radios();
+    //     threads.delay(10);
+    // }
+    if (!radio_initialization_thread_joined && shared.get_rx_radio_initialized_state() && shared.get_tx_radio_initialized_state())
     {
-        initialize_radios();
-        threads.delay(10);
+        // threads.join(radio_initialization_thread_id);
+        threads.kill(radio_initialization_thread_id);
+        radio_initialization_thread_joined = true;
     }
 
     // Check burnwire timer
@@ -173,26 +184,29 @@ void handle_main_queue_packets()
 void initialize_radios()
 {
     // Initialize the astrodev radios
-
-    // Start send/receive loops
-    // Do it only once
-    if (!shared.get_rx_radio_thread_started())
+    while (!shared.get_rx_radio_thread_started() || !shared.get_tx_radio_thread_started())
     {
-        if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
+        // Start send/receive loops
+        // Do it only once
+        if (!shared.get_rx_radio_thread_started())
         {
-            threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
-            shared.set_rx_radio_thread_started(true);
+            if (shared.init_rx_radio(&Serial5, ASTRODEV_BAUD) >= 0)
+            {
+                threads.addThread(Cosmos::Module::Radio_interface::rx_recv_loop, 0, RX_STACK_SIZE);
+                shared.set_rx_radio_thread_started(true);
+            }
         }
-    }
-    if (!shared.get_tx_radio_thread_started())
-    {
-        if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
+        if (!shared.get_tx_radio_thread_started())
         {
-            threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
-            threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-            // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
-            shared.set_tx_radio_thread_started(true);
+            if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
+            {
+                threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+                threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+                // threads.addThread(Cosmos::Module::Radio_interface::tx_radio_loop, 0, TX_STACK_SIZE);
+                shared.set_tx_radio_thread_started(true);
+            }
         }
+        threads.delay(10);
     }
     // Serial.println("Radio init successful");
 }
