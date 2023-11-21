@@ -53,6 +53,10 @@ public:
     elapsedMillis burnwire_timer;
     // Keep track of state of burnwire
     uint8_t burnwire_state = HIGH;
+    // The ID of the current antenna deployment attempt.
+    // When the burn ACK is returned to the iobc, it will check that
+    // the IDs match
+    uint8_t attempt_id = 0;
 
     void set_rx_radio_initialized_state(bool state);
     void set_tx_radio_initialized_state(bool state);

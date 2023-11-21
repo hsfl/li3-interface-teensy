@@ -34,6 +34,7 @@
 
 // Special internal command ids
 #define CMD_HEADER_SIZE 4
+#define BURN_ACK 252
 #define TLM_TSENS 253
 #define CMD_BURNWIRE 254
 #define CMD_REBOOT 255

@@ -20,36 +20,47 @@ void Reboot()
 // Byte 1 = doesn't matter
 // Byte 2 = 254
 // Byte 3 = Number of response bytes (0)
-// Byte 4 = HIGH (1) or LOW (0)
-// Byte 5 = Time (s) to keep on (Optional, default 0)
+// Byte 4 = Attempt ID
+// Byte 5 = HIGH (1) or LOW (0)
+// Byte 6 = Time (s) to keep on (Optional, default 0)
 void SetBurnwire(const Cosmos::Support::PacketComm &packet)
 {
-    if (packet.data.size() < 5)
+    if (packet.data.size() < 6)
     {
         Serial.println("Burn wire command incorrect number of args");
         return;
     }
 
-    // burn wire pin will be set LOW after burnwire_timer exceeds this value
+    // Burn wire pin will be set LOW after burnwire_timer exceeds this value
+    // Default of 0 will keep it on until manually commanded to be set LOW
     shared.burnwire_on_time = 0;
-    if (packet.data.size() == 6 && shared.burnwire_state)
+    if (packet.data.size() == 7 && shared.burnwire_state)
     {
-        shared.burnwire_on_time = packet.data[5] * 1000;
+        shared.burnwire_on_time = packet.data[6] * 1000;
     }
 
-    shared.burnwire_state = packet.data[4] ? HIGH : LOW;
+    // To be sent back to the iobc the burn ACK is created
+    shared.attempt_id = packet.data[4];
+
+    if (packet.data[5] > 1)
+    {
+        Serial.println("Burn wire state arg must be 1 (HIGH) or 0 (LOW)!");
+        return;
+    }
+    shared.burnwire_state = packet.data[5] ? HIGH : LOW;
 
     Serial.print("Setting burn wire ");
     Serial.print(shared.burnwire_state ? "HIGH" : "LOW");
     if (shared.burnwire_on_time)
     {
         Serial.print(" for ");
-        Serial.print(unsigned(packet.data[5]) * 1000);
+        Serial.print(unsigned(packet.data[6]) * 1000);
         Serial.print(" milliseconds.");
     }
     Serial.println();
-    pinMode(12, OUTPUT);
-    digitalWrite(12, shared.burnwire_state);
+    Serial.println("BURNWIRE CODE IS CURRENTLY COMMENTED OUT!"); // Remember to comment back in main.cpp too!
+    // pinMode(12, OUTPUT);
+    // digitalWrite(12, shared.burnwire_state);
 
     // Reset timer to keep burnwire set HIGH
     shared.burnwire_timer = 0;

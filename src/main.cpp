@@ -58,7 +58,9 @@ void setup()
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
     radio_initialization_thread_id = threads.addThread(initialize_radios, 0, 1000);
 
-    Serial.println("This version was flashed on: 10/25/23");
+    Serial.println("This version was flashed on: 11/21/23");
+    Serial.println("This version has burnwire code commented out!");
+    // Serial.println("This version has BURNWIRE COMMANDING ENABLED!");
     Serial.println("Setup complete");
 
 }
@@ -279,7 +281,26 @@ void control_burnwire()
         shared.burnwire_state = LOW;
         Serial.print("Setting burn wire ");
         Serial.println("LOW");
-        pinMode(12, OUTPUT);
-        digitalWrite(12, LOW);
+        Serial.println("BURNWIRE CODE IS CURRENTLY COMMENTED OUT!"); // Remember to comment back in RadioCommands.cpp too!
+        // pinMode(12, OUTPUT);
+        // digitalWrite(12, LOW);
+
+        // Send burn ACK back to iobc
+        // Byte 0 = Unit (doesn't matter)
+        // Byte 1 = doesn't matter
+        // Byte 2 = BURN_ACK (252)
+        // Byte 3 = Number of response bytes (0)
+        // Byte 4 = Attempt ID
+        Cosmos::Support::PacketComm ack_packet;
+        ack_packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
+        ack_packet.header.nodeorig = IOBC_NODE_ID;
+        ack_packet.header.nodedest = IOBC_NODE_ID;
+        ack_packet.data.resize(5);
+        ack_packet.data[0] = 0;
+        ack_packet.data[1] = 0;
+        ack_packet.data[2] = BURN_ACK;
+        ack_packet.data[3] = 0;
+        ack_packet.data[4] = shared.attempt_id;
+        shared.push_queue(shared.main_queue, shared.main_lock, ack_packet);
     }
 }
