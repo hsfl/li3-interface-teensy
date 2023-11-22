@@ -65,19 +65,19 @@ void setup()
     // Serial.println("This version has BURNWIRE COMMANDING ENABLED!");
     Serial.println("Setup complete");
 
-    alive_packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
-    alive_packet.header.nodeorig = IOBC_NODE_ID;
-    alive_packet.header.nodedest = IOBC_NODE_ID;
-    alive_packet.data.resize(4);
+    // alive_packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
+    // alive_packet.header.nodeorig = IOBC_NODE_ID;
+    // alive_packet.header.nodedest = IOBC_NODE_ID;
+    // alive_packet.data.resize(4);
     // Byte 0 = Unit (0)
     // Byte 1 = CMD in or out
     // Byte 2 = Astrodev cmd id
     // Byte 3 = Number of response bytes
-    alive_packet.data[0] = LI3RX;
-    alive_packet.data[1] = 0x20;
-    alive_packet.data[2] = 1; // NOOP
-    alive_packet.data[3] = 0;
-    alive_packet.Wrap();
+    // alive_packet.data[0] = LI3RX;
+    // alive_packet.data[1] = 0x20;
+    // alive_packet.data[2] = 1; // NOOP
+    // alive_packet.data[3] = 0;
+    // alive_packet.Wrap();
 }
 
 //! Main loop
@@ -176,11 +176,11 @@ void handle_main_queue_packets()
                         Serial.println("Error in Wrap()");
                     }
                     // Fake an ax25 header and crc to strip off later
-                    // packet.packetized.resize(16,0xaa);
+                    packet.packetized.resize(16,0xaa);
                     shared.SLIPIobcSerial.beginPacket();
-                    // shared.SLIPIobcSerial.write(packet.packetized.data(), 16);
+                    shared.SLIPIobcSerial.write(packet.packetized.data(), 16);
                     shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
-                    // shared.SLIPIobcSerial.write(packet.packetized.data(), 2);
+                    shared.SLIPIobcSerial.write(packet.packetized.data(), 2);
                     shared.SLIPIobcSerial.endPacket();
                 }
             }
@@ -202,11 +202,11 @@ void handle_main_queue_packets()
                     Serial.println("Error in Wrap()");
                 }
                 // Fake an ax25 header and crc to strip off later
-                // packet.packetized.resize(16,0xaa);
+                packet.packetized.resize(16,0xaa);
                 shared.SLIPIobcSerial.beginPacket();
-                // shared.SLIPIobcSerial.write(packet.packetized.data(), 16);
+                shared.SLIPIobcSerial.write(packet.packetized.data(), 16);
                 shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
-                // shared.SLIPIobcSerial.write(packet.packetized.data(), 2);
+                shared.SLIPIobcSerial.write(packet.packetized.data(), 2);
                 shared.SLIPIobcSerial.endPacket();
             }
             break;
