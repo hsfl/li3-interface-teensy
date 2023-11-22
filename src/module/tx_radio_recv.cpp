@@ -116,8 +116,6 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
                 Serial.print((uint16_t)cmd);
                 Serial.println(" not (yet) handled.");
                 continue;
-                // exit(-1);
-                break;
             }
 #ifdef DEBUG_PRINT
             Serial.print("pushing to main queue, cmd ");

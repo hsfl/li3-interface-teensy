@@ -99,6 +99,8 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
         Serial.println(msg.header.sizelo);
         packet.wrapped.resize(msg.header.sizelo-18);
         memcpy(packet.wrapped.data(), &msg.payload[16], msg.header.sizelo-18);
+        // packet.wrapped.resize(msg.header.sizelo);
+        // memcpy(packet.wrapped.data(), &msg.payload[0], msg.header.sizelo);
         // Assume that all packets from ground are encrypted, forward to iobc
         packet.header.type = Cosmos::Support::PacketComm::TypeId::Blank;
         packet.header.nodeorig = GROUND_NODE_ID;
