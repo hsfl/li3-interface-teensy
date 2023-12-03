@@ -21,6 +21,7 @@ void initialize_radios();
 void handle_main_queue_packets();
 void get_temp_sensor_measurements();
 void control_burnwire();
+void send_tx_init_ack();
 
 PacketComm alive_packet;
 
@@ -217,8 +218,22 @@ void initialize_radios()
             if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
             {
                 threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
-                // threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-                // shared.set_tx_radio_thread_started(true);
+                // Tell iobc that TX has completed initialization.
+                // If iobc determines that transmission is safe,
+                // it will call SetFastPA to set TX radio to operational power amp levels.
+                // Byte 0 = Unit (0)
+                // Byte 1 = doesn't matter
+                // Byte 2 = TX_INIT_ACK (251)
+                // Byte 3 = Number of response bytes (0)
+                packet.header.type = PacketComm::TypeId::CommandRadioAstrodevCommunicate;
+                packet.header.nodeorig = IOBC_NODE_ID;
+                packet.header.nodedest = IOBC_NODE_ID;
+                packet.data.resize(CMD_HEADER_SIZE);
+                packet.data[0] = 0;
+                packet.data[1] = 0;
+                packet.data[2] = TX_INIT_ACK;
+                packet.data[3] = 0;
+                shared.push_queue(shared.main_queue, shared.main_lock, packet);
             }
         }
         threads.delay(10);
@@ -238,7 +253,7 @@ void get_temp_sensor_measurements()
     // Stick temp measurements under special kind of CommandRadioAstrodevCommunicate packet
     // Byte 0 = Unit (0)
     // Byte 1 = doesn't matter
-    // Byte 2 = 253
+    // Byte 2 = TLM_TSENS (253)
     // Byte 3 = Number of response bytes (8)
     // Byte 4-7  = TSEN 0 temp (iX5 heat sink +y)
     // Byte 8-11 = TSEN 1 temp (iX5 heat sink -y)
