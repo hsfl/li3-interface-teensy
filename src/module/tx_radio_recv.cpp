@@ -12,8 +12,12 @@ namespace
     // Reusable packet objects
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
+    elapsedMillis last_connected;
 
     elapsedMillis tx_telem_timer;
+
+    // If it has been more than 5 minutes since last radio response 
+    const unsigned long unconnected_timeout = 5*60 * 1000;
 }
 
 void Cosmos::Module::Radio_interface::tx_recv_loop()
@@ -24,17 +28,27 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
     
     while (true)
     {
-        threads.delay(10);
+        threads.delay(TX_THROTTLE_MS/2);
+        // Have lock here to not interfere when reseting TCV config via command
         Threads::Scope lock(shared.tx_lock);
 
-        if (tx_telem_timer > 20000)
+        if (tx_telem_timer > 60000)
         {
             // Check connection
             shared.astrodev_tx.Ping(false);
             // shared.astrodev_tx.GetTCVConfig(false);
-            shared.astrodev_tx.GetTelemetry(false);
+            // shared.astrodev_tx.GetTelemetry(false);
             tx_telem_timer = 0;
             // Attempt receive of any of the above packets
+        }
+
+        // Check if we are still connected
+        if (last_connected > unconnected_timeout)
+        {
+            // Reboot if encountering excessive difficulty
+            Serial.println("TX Timeout, rebooting...");
+            threads.delay(5000);
+            WRITE_RESTART(0x5FA0004);
         }
 
         iretn = shared.astrodev_tx.Receive(incoming_message);
@@ -47,6 +61,8 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
         }
         else
         {
+
+            last_connected = 0;
             // Serial.print("tx.Receive returned ");
             // Serial.print(iretn);
             // Serial.print(" [4]: ");
@@ -65,11 +81,11 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
             // Though this does mean that I can't distinguish between acks and noacks
             case (Astrodev::Command)0:
                 continue;
-#ifndef MOCK_TESTING
             case Astrodev::Command::NOOP:
             case Astrodev::Command::GETTCVCONFIG:
             case Astrodev::Command::SETTCVCONFIG:
             case Astrodev::Command::TELEMETRY:
+            case Astrodev::Command::FASTSETPA:
                 // Setup PacketComm packet stuff
                 packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
                 packet.header.nodeorig = IOBC_NODE_ID;
@@ -82,35 +98,13 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
                 memcpy(packet.data.data()+4, &incoming_message.payload[0], incoming_message.header.sizelo);
                 break;
             case Astrodev::Command::TRANSMIT:
-                    // Transmit ACK
-                    continue;
+                // Transmit ACK
+                continue;
                 break;
             case Astrodev::Command::RECEIVE:
-                // Packets from the ground will be in PacketComm protocol
-                // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
-                Serial.print("in tx receive, bytes:");
-                Serial.println(incoming_message.header.sizelo);
-                memcpy(packet.wrapped.data(), &incoming_message.payload[0], incoming_message.header.sizelo);
-                iretn = packet.Unwrap();
-                if (iretn < 0)
-                {
-                    Serial.println("Unwrap fail in TX radio recv");
-                    continue;
-                }
+                // Discard anything the TX radio picks up
+                continue;
                 break;
-#else
-            // These cases here are for faking a radio interaction
-            // Any 
-            case Astrodev::Command::RESET:
-            case Astrodev::Command::NOOP:
-            case Astrodev::Command::SETTCVCONFIG:
-            case Astrodev::Command::GETTCVCONFIG:
-                packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
-                packet.data.resize(1);
-                packet.data[0] = (uint8_t)cmd;
-                break;
-            
-#endif
             default:
                 Serial.print("tx recv: cmd ");
                 Serial.print((uint16_t)cmd);

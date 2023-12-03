@@ -9,7 +9,7 @@ namespace Cosmos
     {
         namespace Radio_interface
         {
-            void send_packet();
+            int32_t send_packet(const PacketComm& packet);
             void send_loop();
         }
     }

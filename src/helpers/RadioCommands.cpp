@@ -83,16 +83,33 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
         return;
     }
 
+    using namespace Cosmos::Devices::Radios;
+
+    // For regular UHF commands, don't run them if the respective radio
+    // is not yet initialized
+    if (packet.data[2] <= (unsigned)Astrodev::Command::ALARM_RTC)
+    {
+        if (!packet.data[0] && !shared.get_rx_radio_initialized_state())
+        {
+            return;
+        }
+        if (packet.data[0] && !shared.get_tx_radio_initialized_state())
+        {
+            return;
+        }
+    }
+
+
 
     switch (packet.data[2])
     {
-    case 5: // Get TCV Config
+    case 0x05: // Get TCV Config
         !packet.data[0] ? shared.astrodev_rx.GetTCVConfig(false) : shared.astrodev_tx.GetTCVConfig(false);
         break;
-    case 7: // Get Telemetry
+    case 0x07: // Get Telemetry
         !packet.data[0] ? shared.astrodev_rx.GetTelemetry(false) : shared.astrodev_tx.GetTelemetry(false);
         break;
-    case 6: // Set TCV Config
+    case 0x06: // Set TCV Config
         {
             Cosmos::Devices::Radios::Astrodev *astrodev;
             !packet.data[0] ? astrodev = &shared.astrodev_rx : astrodev = &shared.astrodev_tx;
@@ -102,28 +119,40 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                 return;
             }
 
-            // Assuming here that only the tx radio will have its settings changed
-            Threads::Scope lock(shared.tx_lock);
 
             Cosmos::Devices::Radios::Astrodev::tcv_config new_tcv_config;
             memcpy(&new_tcv_config, &packet.data[4], sizeof(new_tcv_config));
-            astrodev->tcv_configuration = new_tcv_config;
-            Serial.print("power level ");
+
+            Serial.print("Setting power level to: ");
             Serial.println(unsigned(new_tcv_config.power_amp_level));
+
+            if (new_tcv_config.power_amp_level == astrodev->tcv_configuration.power_amp_level)
+            {
+                Serial.println("Power level is already the requested value.");
+                return;
+            }
+
+            // Assuming here that only the tx radio will have its settings changed
+            Threads::Scope lock(shared.tx_lock);
+
+            astrodev->tcv_configuration = new_tcv_config;
 
             int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
             while(true)
             {
-                while ((iretn = astrodev->SetTCVConfig()) < 0)
+                while ((iretn = astrodev->SetTCVConfig()) < 0 && --retries > 0)
                 {
                     Serial.println("Resetting");
                     astrodev->Reset();
                     Serial.println("Failed to settcvconfig astrodev");
                     threads.delay(5000);
                 }
-                Serial.println("SetTCVConfig successful");
+                if (iretn >= 0)
+                {
+                    Serial.println("SetTCVConfig successful");
+                }
 
-                while ((iretn = astrodev->GetTCVConfig()) < 0)
+                while ((iretn = astrodev->GetTCVConfig()) < 0 && --retries > 0)
                 {
                     Serial.println("Failed to gettcvconfig astrodev");
                     threads.delay(5000);
@@ -174,6 +203,44 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                 }
             }
             Serial.println("config check OK!");
+        }
+        break;
+    case 0x20: // Fast PA Set
+        {
+            Cosmos::Devices::Radios::Astrodev *astrodev;
+            !packet.data[0] ? astrodev = &shared.astrodev_rx : astrodev = &shared.astrodev_tx;
+
+            if (packet.data.size() < 5)
+            {
+                return;
+            }
+
+            Serial.print("Setting power level to: ");
+            Serial.println(unsigned(packet.data[4]));
+
+            if (packet.data[4] == astrodev->tcv_configuration.power_amp_level)
+            {
+                Serial.println("Power level is already the requested value.");
+                return;
+            }
+
+            // Assuming here that only the tx radio will have its settings changed
+            Threads::Scope lock(shared.tx_lock);
+
+            astrodev->tcv_configuration.power_amp_level = packet.data[4];
+
+            int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
+
+            while ((iretn = astrodev->SetPowerAmpFast()) < 0 && --retries > 0)
+            {
+                threads.delay(2000);
+            }
+            if (iretn < 0 && retries < 0)
+            {
+                // Reboot if encountering excessive difficulty
+                WRITE_RESTART(0x5FA0004);
+            }
+            Serial.println("SetPowerAmpFast successful");
         }
         break;
     case CMD_BURNWIRE:

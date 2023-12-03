@@ -30,7 +30,9 @@ void Cosmos::Module::Radio_interface::send_loop()
         iretn = shared.pop_queue(shared.send_queue, shared.send_lock, packet);
         if (iretn >= 0)
         {
-            send_packet();
+            send_packet(packet);
+            // Throttle speed
+            threads.delay(3000);
         }
         else
         {
@@ -76,8 +78,12 @@ void Cosmos::Module::Radio_interface::send_loop()
 }
 
 //! Send out a PacketComm packet with proper radio transmit buffer checks and retries
-void Cosmos::Module::Radio_interface::send_packet()
+int32_t Cosmos::Module::Radio_interface::send_packet(const PacketComm& packet)
 {
+    if (!shared.get_tx_radio_initialized_state())
+    {
+        return ASTRODEV_ERROR_NACK;
+    }
     Threads::Scope lock(shared.tx_lock);
     int32_t iretn = 0;
     uint8_t retries = 0;
@@ -127,5 +133,5 @@ void Cosmos::Module::Radio_interface::send_packet()
         }
     };
 
-    return;
+    return iretn;
 }

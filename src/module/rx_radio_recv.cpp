@@ -15,14 +15,26 @@ namespace
     elapsedMillis last_connected;
     elapsedMillis rx_telem_timer;
 
-    // If it has been more than 30 seconds since last 
-    const unsigned long unconnected_timeout = 30 * 1000;
+    // AX25 header left-shifts the destination callsign by 1,
+    // precalculate for faster checks later to
+    // discard anything RX hears from the TX radio's transmissions,
+    // which unfortunately happens at higher power amp levels.
+    char DEST_CALLSIGN_SHIFTED[6];
+
+    // If it has been more than 5 minutes since last radio response 
+    const unsigned long unconnected_timeout = 5*60 * 1000;
 }
 
 void Cosmos::Module::Radio_interface::rx_recv_loop()
 {
     // int32_t iretn;
     packet.header.nodedest = 0;
+
+    for (uint8_t i=0; i<6; ++i)
+    {
+        DEST_CALLSIGN_SHIFTED[i] = DEST_CALL_SIGN[i] << 1;
+    }
+    
     Serial.println("rx_recv_loop started");
     while(true)
     {
@@ -36,13 +48,13 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
             Radio_interface::handle_rx_recv(incoming_message);
         }
 
-        // Grab Telemetry every 10 seconds, and check if we are still connected
-        if (rx_telem_timer > 10000)
+        // Grab Telemetry every 60 seconds, and check if we are still connected
+        if (rx_telem_timer > 60000)
         {
             // Check connection
-            // shared.astrodev_rx.Ping(false);
+            shared.astrodev_rx.Ping(false);
             // shared.astrodev_rx.GetTCVConfig(false);
-            shared.astrodev_rx.GetTelemetry(false);
+            // shared.astrodev_rx.GetTelemetry(false);
             rx_telem_timer = 0;
             // Attempt receive of any of the above packets
             continue;
@@ -51,14 +63,10 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
         // Check if we are still connected
         if (last_connected > unconnected_timeout)
         {
-            // Handle not-connnected status
-            iretn = shared.connect_radio(shared.astrodev_rx, 449900, 449900);
-            if (iretn < 0)
-            {
-                // Keep attempting reconnect
-                continue;
-            }
-            last_connected = 0;
+            // Reboot if encountering excessive difficulty
+            Serial.println("RX Timeout, rebooting...");
+            threads.delay(5000);
+            WRITE_RESTART(0x5FA0004);
         }
     }
 }
@@ -72,11 +80,11 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     // Though this does mean that I can't distinguish between acks and noacks
     case (Astrodev::Command)0:
         return;
-#ifndef MOCK_TESTING
     case Astrodev::Command::NOOP:
     case Astrodev::Command::GETTCVCONFIG:
     case Astrodev::Command::SETTCVCONFIG:
     case Astrodev::Command::TELEMETRY:
+    case Astrodev::Command::FASTSETPA:
         // Setup PacketComm packet stuff
         packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
         packet.header.nodeorig = IOBC_NODE_ID;
@@ -95,27 +103,23 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     case Astrodev::Command::RECEIVE:
         // Packets from the ground will be in PacketComm protocol
         // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
+
+        // If the source of the packet is from the TX radio, that's no good, discard.
+        if (strncmp((char*)&msg.payload[7], DEST_CALLSIGN_SHIFTED, 6) == 0)
+        {
+            Serial.println("RX hearing own messages from TX!");
+            return;
+        }
         Serial.print("in rx receive, bytes:");
         Serial.println(msg.header.sizelo);
         packet.wrapped.resize(msg.header.sizelo);
         memcpy(packet.wrapped.data(), &msg.payload[0], msg.header.sizelo);
-        // Assume that all packets from ground are encrypted, forward to iobc
-        packet.header.type = Cosmos::Support::PacketComm::TypeId::Blank;
-        packet.header.nodeorig = GROUND_NODE_ID;
-        break;
-#else
-    // These cases here are for faking a radio interaction.
-    // These will be sent from the radio stack interface board's teensy.
-    // Any RECEIVE
-    case Astrodev::Command::RESET:
-    case Astrodev::Command::NOOP:
-    case Astrodev::Command::SETTCVCONFIG:
-    case Astrodev::Command::GETTCVCONFIG:
-        packet.header.type = Cosmos::Support::PacketComm::TypeId::DataRadioResponse;
-        packet.data.resize(1);
-        packet.data[0] = (uint8_t)msg.header.command;
-        break;
-#endif
+        // Let iobc handle everything from ground
+        // packet.header.type = Cosmos::Support::PacketComm::TypeId::Blank;
+        // packet.header.nodeorig = GROUND_NODE_ID;
+        // break;
+        shared.send_packet_to_iobc(packet);
+        return;
     default:
         Serial.print("rx: cmd ");
         Serial.print((uint16_t)msg.header.command);
@@ -127,5 +131,6 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     Serial.print("pushing to main queue, cmd ");
     Serial.println((uint16_t)msg.header.command);
 #endif
+    Serial.println("sending to queue");
     shared.push_queue(shared.main_queue, shared.main_lock, packet);
 }

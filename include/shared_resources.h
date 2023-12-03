@@ -42,10 +42,13 @@ public:
     // Mutex to use when interacting with the TX radio. To be used when you need to shut off all other interactions
     // with it until a new power amp config is set
     Threads::Mutex tx_lock;
+    // Mutex to lock iobc serial writing
+    Threads::Mutex iobc_serial_write_lock;
 
     // Buffer accessors
     int32_t pop_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, Cosmos::Support::PacketComm &packet);
     void push_queue(std::deque<Cosmos::Support::PacketComm>& queue, Threads::Mutex& mutex, const Cosmos::Support::PacketComm &packet);
+    void send_packet_to_iobc(const PacketComm& packet);
 
     // Set burnwire pin to LOW when burnwire_timer exceeds this value
     uint32_t burnwire_on_time = 0;

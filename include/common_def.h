@@ -3,8 +3,17 @@
 
 #define ASTRODEV_BAUD 9600
 
+#define RX_FREQ 449900
+#define TX_FREQ 400800
+
+#define SOURCE_CALL_SIGN "SOURCE"
+#define DEST_CALL_SIGN "DESTIN"
+
 #define RX_PACKET_SIZE 250
 #define TX_PACKET_SIZE 250
+
+// Throttle TX packets to keep temperature low
+#define TX_THROTTLE_MS 5000
 
 #define RX_STACK_SIZE 9000
 #define TX_STACK_SIZE 6000
@@ -34,6 +43,7 @@
 
 // Special internal command ids
 #define CMD_HEADER_SIZE 4
+#define REBOOT_ACK 251
 #define BURN_ACK 252
 #define TLM_TSENS 253
 #define CMD_BURNWIRE 254

@@ -243,6 +243,8 @@ namespace Cosmos {
                 int32_t GetTCVConfig(bool get_response);
                 int32_t SetTCVConfig();
                 int32_t SetTCVConfig(bool get_response);
+                int32_t SetPowerAmpFast();
+                int32_t SetPowerAmpFast(bool get_response);
                 int32_t GetTelemetry();
                 int32_t GetTelemetry(bool get_response);
                 int32_t SetRFConfig(rf_config config);

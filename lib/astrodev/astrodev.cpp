@@ -33,12 +33,12 @@ namespace Cosmos {
                 do
                 {
                     iretn = Reset();
-                    if (--retries <= 0)
+                    if (iretn < 0 && --retries <= 0)
                     {
                         Serial.println("Radio reset unsuccessful");
                         return iretn;
                     }
-                    else
+                    else if (iretn < 0)
                     {
                         threads.delay(2000);
                     }
@@ -189,16 +189,26 @@ namespace Cosmos {
                 }
 
                 threads.delay(10);
-                iretn = Receive(message);
+
+                int32_t retries = 3;
+                do
+                {
+                    iretn = Receive(message);
 #ifdef DEBUG_PRINT
-                Serial.print("PReceive iretn: ");
-                Serial.println(iretn);
+                    Serial.print("PReceive iretn: ");
+                    Serial.println(iretn);
 #endif
+                    if (iretn == (int32_t)Command::NOOP)
+                    {
+                        return 0;
+                    }
+                } while (--retries > 0);
+                
                 if (iretn < 0)
                 {
                     return iretn;
                 }
-                return 0;
+                return COSMOS_ASTRODEV_ERROR_NACK;
             }
 
             int32_t Astrodev::Reset()
@@ -230,14 +240,23 @@ namespace Cosmos {
                 }
 
                 threads.delay(1000);
-                iretn = Receive(message);
-                Serial.print("RReceive iretn: ");
-                Serial.println(iretn);
+                int32_t retries = 3;
+                do
+                {
+                    iretn = Receive(message);
+                    Serial.print("RReceive iretn: ");
+                    Serial.println(iretn);
+                    if (iretn == (int32_t)Command::RESET)
+                    {
+                        return 0;
+                    }
+                } while (--retries > 0);
+                
                 if (iretn < 0)
                 {
                     return iretn;
                 }
-                return iretn;
+                return COSMOS_ASTRODEV_ERROR_NACK;
             }
 
             int32_t Astrodev::GetTCVConfig()
@@ -254,10 +273,10 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
-#ifdef DEBUG_PRINT
+// #ifdef DEBUG_PRINT
                 Serial.print("GTransmit iretn: ");
                 Serial.println(iretn);
-#endif
+// #endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -269,18 +288,27 @@ namespace Cosmos {
                     return iretn;
                 }
 
-                threads.delay(10);
-                iretn = Receive(message);
-#ifdef DEBUG_PRINT
+                threads.delay(1000);
+                int32_t retries = 5;
+                do
+                {
+                    iretn = Receive(message);
+// #ifdef DEBUG_PRINT
                 Serial.print("GReceive iretn: ");
                 Serial.println(iretn);
-#endif
+// #endif
+                    if (iretn == (int32_t)Command::GETTCVCONFIG)
+                    {
+                        memcpy(&tcv_configuration, &message.payload[0], message.header.sizelo);
+                        return 0;
+                    }
+                } while (--retries > 0);
+                
                 if (iretn < 0)
                 {
                     return iretn;
                 }
-                memcpy(&tcv_configuration, &message.payload[0], message.header.sizelo);
-                return 0;
+                return COSMOS_ASTRODEV_ERROR_NACK;
             }
 
             int32_t Astrodev::SetTCVConfig()
@@ -316,14 +344,75 @@ namespace Cosmos {
                 // Wait at least 250 ms for settings to be applied
                 // But seems to require about 10x as long
                 threads.delay(2500);
-                iretn = Receive(message);
-                Serial.print("SReceive iretn: ");
-                Serial.println(iretn);
+                int32_t retries = 3;
+                do
+                {
+                    iretn = Receive(message);
+                    Serial.print("SReceive iretn: ");
+                    Serial.println(iretn);
+                    if (iretn == (int32_t)Command::SETTCVCONFIG)
+                    {
+                        return 0;
+                    }
+                } while (--retries > 0);
+                
                 if (iretn < 0)
                 {
                     return iretn;
                 }
-                return 0;
+                return COSMOS_ASTRODEV_ERROR_NACK;
+            }
+
+            int32_t Astrodev::SetPowerAmpFast()
+            {
+                return SetPowerAmpFast(true);
+            }
+
+            int32_t Astrodev::SetPowerAmpFast(bool get_response)
+            {
+                int32_t iretn;
+                frame message;
+
+                message.header.command = Command::FASTSETPA;
+                message.header.sizehi = 0;
+                message.header.sizelo = sizeof(tcv_configuration.power_amp_level);
+                message.payload[0] = tcv_configuration.power_amp_level;
+                iretn = Transmit(message);
+#ifdef DEBUG_PRINT
+                Serial.print("STransmit iretn: ");
+                Serial.println(iretn);
+#endif
+                if (iretn < 0)
+                {
+                    return iretn;
+                }
+
+                // Don't try to get the response
+                if (!get_response)
+                {
+                    return iretn;
+                }
+
+                // Wait at least 250 ms for settings to be applied
+                // But seems to require about 10x as long
+                threads.delay(2500);
+                int32_t retries = 5;
+                do
+                {
+                    iretn = Receive(message);
+                    Serial.print("SReceive iretn: ");
+                    Serial.println(iretn);
+                    if (iretn == (int32_t)Command::FASTSETPA)
+                    {
+                        return 0;
+                    }
+                } while (--retries > 0);
+                
+                if (iretn < 0)
+                {
+                    return iretn;
+                }
+                return COSMOS_ASTRODEV_ERROR_NACK;
             }
 
             int32_t Astrodev::GetTelemetry()
@@ -356,18 +445,26 @@ namespace Cosmos {
                 }
 
                 threads.delay(10);
-                iretn = Receive(message);
+                int32_t retries = 5;
+                do
+                {
+                    iretn = Receive(message);
 #ifdef DEBUG_PRINT
-                Serial.print("TReceive iretn: ");
-                Serial.println(iretn);
+                    Serial.print("TReceive iretn: ");
+                    Serial.println(iretn);
 #endif
+                    if (iretn == (int32_t)Command::TELEMETRY)
+                    {
+                        memcpy(&last_telem, &message.payload[0], message.header.sizelo);
+                        return 0;
+                    }
+                } while (--retries > 0);
+                
                 if (iretn < 0)
                 {
                     return iretn;
                 }
-                memcpy(&last_telem, &message.payload[0], message.header.sizelo);
-
-                return 0;
+                return COSMOS_ASTRODEV_ERROR_NACK;
             }
 
             int32_t Astrodev::SetRFConfig(rf_config config)
@@ -414,16 +511,19 @@ namespace Cosmos {
                 {
                     threads.delay(10);
                     ch = serial->read();
+                    // Serial.print(ch, HEX);
                     if (ch != SYNC0)
                     {
                         continue;
                     }
                     ch = serial->read();
+                    // Serial.print(ch, HEX);
                     if (ch == SYNC1)
                     {
                         break;
                     }
                 }
+                // Serial.println("");
                 if (ch != SYNC1)
                 {
                     return COSMOS_ASTRODEV_ERROR_SYNC1;
@@ -433,11 +533,12 @@ namespace Cosmos {
 
                 // Read rest of header
                 size_t bytesRead = serial->readBytes(&message.preamble[2], 6);
+                size_t bytesRead2 = 0;
                 if (bytesRead < 6)
                 {
                     // threads.yield();
                     // Read rest of header in case not all bytes were read
-                    size_t bytesRead2 = serial->readBytes(&message.preamble[2+bytesRead], 6-bytesRead);
+                    bytesRead2 = serial->readBytes(&message.preamble[2+bytesRead], 6-bytesRead);
                     if (bytesRead + bytesRead2 != 6)
                     {
                         return ASTRODEV_ERROR_HEADER;
@@ -450,7 +551,16 @@ namespace Cosmos {
                 {
                     return (ASTRODEV_ERROR_HEADER_CS);
                 }
-
+// Serial.print("h) msg: ");
+// Serial.print(unsigned(message.header.command));
+// Serial.print(" bytesRead: ");
+// Serial.print(bytesRead + bytesRead2);
+// Serial.print(" size: ");
+// Serial.print(unsigned(message.header.sizelo));
+// Serial.print(" cs: ");
+// Serial.print(message.header.cs);
+// Serial.print(" check: ");
+// Serial.println(cs);
 #ifdef DEBUG_PRINT
                 Serial.print("header.command: ");
                 Serial.println(unsigned(message.header.command));
@@ -484,6 +594,12 @@ namespace Cosmos {
                     }
                     // TODO: check this doesn't catch any strange stuff
                     return (int32_t)message.header.command;
+                    // uint16_t full_cmd = 0;
+                    // memcpy(&full_cmd, &message.header.command, sizeof(uint16_t));
+                    // __ntohs(full_cmd);
+                    // Serial.print("Rret1 : ");
+                    // Serial.println(full_cmd, HEX);
+                    // return full_cmd;
                 }
                 else if (message.header.status.ack == 0x0f && message.header.sizelo == 0xff)
                 {
@@ -516,7 +632,12 @@ namespace Cosmos {
                 uint8_t size = message.header.sizelo;
                 if (!size)
                 {
-                    return (int32_t)message.header.command;
+                    uint16_t full_cmd = 0;
+                    memcpy(&full_cmd, &message.header.command, sizeof(uint16_t));
+                    __ntohs(full_cmd);
+                    Serial.print("Rret2 : ");
+                    Serial.println(full_cmd, HEX);
+                    return full_cmd;
                 }
                 // Read rest of payload bytes
                 size_t sizeToRead = size+2;
@@ -550,7 +671,18 @@ namespace Cosmos {
 
                 // Check payload for accuracy
                 cs = message.payload[size] | (message.payload[size+1] << 8L);
-                if (cs != CalcCS(&message.preamble[2], 6+size))
+                uint16_t check = CalcCS(&message.preamble[2], 6+size);
+                // Serial.print("p) msg: ");
+                // Serial.print(unsigned(message.header.command));
+                // Serial.print(" bytesRead: ");
+                // Serial.print(bytesRead);
+                // Serial.print(" sizeToRead: ");
+                // Serial.print(sizeToRead);
+                // Serial.print(" cs: ");
+                // Serial.print(cs);
+                // Serial.print(" crc: ");
+                // Serial.println(check);
+                if (cs != check)
                 {
                     return (ASTRODEV_ERROR_PAYLOAD_CS);
                 }
@@ -568,6 +700,12 @@ namespace Cosmos {
                 // Handle command types outside of astrodev library
                 // i.e., pushing payloads to appropriate queues and what not
                 return (int32_t)message.header.command;
+                // uint16_t full_cmd = 0;
+                // memcpy(&full_cmd, &message.header.command, sizeof(uint16_t));
+                // __ntohs(full_cmd);
+                // Serial.print("Rret3 : ");
+                // Serial.println(full_cmd, HEX);
+                // return full_cmd;
             }
 
             void Astrodev::setSerial(HardwareSerial* new_serial)

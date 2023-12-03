@@ -17,7 +17,6 @@ extern "C" uint32_t set_arm_clock(uint32_t frequency);
 #define AD590MF_TEMP_PIN 19
 
 // Function forward declarations
-void sendpacket(Cosmos::Support::PacketComm &packet);
 void initialize_radios();
 void handle_main_queue_packets();
 void get_temp_sensor_measurements();
@@ -51,7 +50,9 @@ void setup()
     #endif
 
     // initialize LED digital pin as an output.
+#ifdef DEBUG_BLINK
     pinMode(LED_BUILTIN, OUTPUT);
+#endif
 
     // Each thread tick length
     threads.setSliceMicros(10);
@@ -60,7 +61,11 @@ void setup()
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
     radio_initialization_thread_id = threads.addThread(initialize_radios, 0, 1000);
 
-    Serial.println("This version was flashed on: 11/21/23");
+    Serial.println("This version was flashed on: 11/29/23");
+    // Serial.println("This version has is TX only, no telems, alive packets");
+    // Serial.println("This version has is RX only, no telems");
+    // Serial.println("This version has is RX only, w/ telems");
+    Serial.println("This version has RX and TX");
     Serial.println("This version has burnwire code commented out!");
     // Serial.println("This version has BURNWIRE COMMANDING ENABLED!");
     Serial.println("Setup complete");
@@ -84,12 +89,9 @@ void setup()
 void loop()
 {
     // Initialize radios if it they are not yet
-    // if (!shared.get_rx_radio_initialized_state() || !shared.get_tx_radio_initialized_state())
-    // {
-    //     initialize_radios();
-    //     threads.delay(10);
-    // }
     if (!radio_initialization_thread_joined && shared.get_rx_radio_initialized_state() && shared.get_tx_radio_initialized_state())
+    // if (!radio_initialization_thread_joined && shared.get_tx_radio_initialized_state())
+    // if (!radio_initialization_thread_joined && shared.get_rx_radio_initialized_state())
     {
         // threads.join(radio_initialization_thread_id);
         threads.kill(radio_initialization_thread_id);
@@ -133,21 +135,8 @@ void handle_main_queue_packets()
 #endif
         using namespace Cosmos::Support;
 
-        // If an encrypted packet came from the ground, forward straight to iobc
-        // This will have come from rx_radio_recv.cpp
-        if (packet.header.type == PacketComm::TypeId::Blank && packet.header.nodeorig == GROUND_NODE_ID)
-        {
-            Serial.println("Forwarding encrypted packet from ground to iobc");
-            shared.SLIPIobcSerial.beginPacket();
-            shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
-            shared.SLIPIobcSerial.endPacket();
-            // for (auto b : packet.wrapped)
-            // {
-            //     Serial.print((unsigned)b, 16);
-            //     Serial.print(" ");
-            // }Serial.println("");
-            return;
-        }
+        // Since iobc recv loop is handling all other packets,
+        // stuff in here should only be astrodev cmd packets and responses
 
         switch(packet.header.type)
         {
@@ -174,21 +163,14 @@ void handle_main_queue_packets()
                     if (iretn < 0)
                     {
                         Serial.println("Error in Wrap()");
+                        break;
                     }
                     // Fake an ax25 header and crc to strip off later
-                    packet.packetized.resize(16,0xaa);
-                    shared.SLIPIobcSerial.beginPacket();
-                    shared.SLIPIobcSerial.write(packet.packetized.data(), 16);
-                    shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
-                    shared.SLIPIobcSerial.write(packet.packetized.data(), 2);
-                    shared.SLIPIobcSerial.endPacket();
+                    packet.packetized.resize(16 + packet.wrapped.size() + 2, 0xaa);
+                    memcpy(packet.packetized.data()+16, packet.wrapped.data(), packet.wrapped.size());
+                    swap(packet.packetized, packet.wrapped);
+                    shared.send_packet_to_iobc(packet);
                 }
-            }
-            break;
-        case PacketComm::TypeId::DataRadioResponse:
-            {
-                Serial.print("Radio response, cmd: ");
-                Serial.println(packet.data[0]);
             }
             break;
         default:
@@ -200,14 +182,13 @@ void handle_main_queue_packets()
                 if (iretn < 0)
                 {
                     Serial.println("Error in Wrap()");
+                    break;
                 }
                 // Fake an ax25 header and crc to strip off later
-                packet.packetized.resize(16,0xaa);
-                shared.SLIPIobcSerial.beginPacket();
-                shared.SLIPIobcSerial.write(packet.packetized.data(), 16);
-                shared.SLIPIobcSerial.write(packet.wrapped.data(), packet.wrapped.size());
-                shared.SLIPIobcSerial.write(packet.packetized.data(), 2);
-                shared.SLIPIobcSerial.endPacket();
+                packet.packetized.resize(16 + packet.wrapped.size() + 2, 0xaa);
+                memcpy(packet.packetized.data()+16, packet.wrapped.data(), packet.wrapped.size());
+                swap(packet.packetized, packet.wrapped);
+                shared.send_packet_to_iobc(packet);
             }
             break;
         }
@@ -217,7 +198,9 @@ void handle_main_queue_packets()
 void initialize_radios()
 {
     // Initialize the astrodev radios
-    while (!shared.get_rx_radio_thread_started() || !shared.get_tx_radio_thread_started())
+    while (!shared.get_rx_radio_thread_started() || !shared.get_tx_radio_initialized_state())
+    // while (!shared.get_tx_radio_thread_started())
+    // while (!shared.get_rx_radio_thread_started())
     {
         // Start send/receive loops
         // Do it only once
@@ -229,13 +212,13 @@ void initialize_radios()
                 shared.set_rx_radio_thread_started(true);
             }
         }
-        if (!shared.get_tx_radio_thread_started())
+        if (!shared.get_tx_radio_initialized_state())
         {
             if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
             {
                 threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
-                threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
-                shared.set_tx_radio_thread_started(true);
+                // threads.addThread(Cosmos::Module::Radio_interface::send_loop, 0, TX_STACK_SIZE);
+                // shared.set_tx_radio_thread_started(true);
             }
         }
         threads.delay(10);
