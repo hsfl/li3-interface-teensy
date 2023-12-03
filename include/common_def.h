@@ -14,6 +14,16 @@
 
 // Throttle TX packets to keep temperature low
 #define TX_THROTTLE_MS 5000
+// If set to true, instead of sleeping for the throttle time,
+// any TX packets from the iobc will be discarded instead if the
+// timer is less than TX_THROTTLE_MS.
+// This is because the TX send loop was merged with
+// the iobc recv loop. By setting this to true,
+// you can avoid the scenario where a large backlog
+// of packets are left on the uart buffer, including
+// non-TX packets (i.e., astrodev or teensy command packets).
+// To measure packet loss over the radio link, set this to false
+#define DISCARD_THROTTLED_PACKETS true
 
 #define RX_STACK_SIZE 9000
 #define TX_STACK_SIZE 6000

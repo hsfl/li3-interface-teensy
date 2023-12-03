@@ -123,6 +123,15 @@ void send_tx_packet()
     // Throttle to minimize heat
     if (send_timer < TX_THROTTLE_MS)
     {
+        // The point of this is to not get bogged down in TX packets
+        // if there might be other non-TX packets waiting.
+        // Also, for HyTI, UHF down is only for LEOPS telems, so
+        // better to discard older telems in favor of newer ones.
+        if (DISCARD_THROTTLED_PACKETS)
+        {
+            Serial.println("DISCARD_THROTTLED_PACKETS true, discarding TX packet.");
+            return;
+        }
         threads.delay(TX_THROTTLE_MS - send_timer);
     }
     iretn = Cosmos::Module::Radio_interface::send_packet(packet);

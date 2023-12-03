@@ -273,10 +273,10 @@ namespace Cosmos {
                 message.header.sizehi = 0;
                 message.header.sizelo = 0;
                 iretn = Transmit(message);
-// #ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT
                 Serial.print("GTransmit iretn: ");
                 Serial.println(iretn);
-// #endif
+#endif
                 if (iretn < 0)
                 {
                     return iretn;
@@ -293,10 +293,10 @@ namespace Cosmos {
                 do
                 {
                     iretn = Receive(message);
-// #ifdef DEBUG_PRINT
+#ifdef DEBUG_PRINT
                 Serial.print("GReceive iretn: ");
                 Serial.println(iretn);
-// #endif
+#endif
                     if (iretn == (int32_t)Command::GETTCVCONFIG)
                     {
                         memcpy(&tcv_configuration, &message.payload[0], message.header.sizelo);
