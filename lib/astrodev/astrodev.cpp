@@ -343,7 +343,7 @@ namespace Cosmos {
 
                 // Wait at least 250 ms for settings to be applied
                 // But seems to require about 10x as long
-                threads.delay(2500);
+                threads.delay(1000);
                 int32_t retries = 3;
                 do
                 {
@@ -395,7 +395,7 @@ namespace Cosmos {
 
                 // Wait at least 250 ms for settings to be applied
                 // But seems to require about 10x as long
-                threads.delay(2500);
+                threads.delay(1000);
                 int32_t retries = 5;
                 do
                 {

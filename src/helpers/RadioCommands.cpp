@@ -207,6 +207,13 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
         break;
     case 0x20: // Fast PA Set
         {
+            // Args:
+            // Byte 0 = Unit (1)
+            // Byte 1 = doesn't matter
+            // Byte 2 = FastSetPA (0x20)
+            // Byte 3 = Number of response bytes (0)
+            // Byte 4 = New power amp level
+
             Cosmos::Devices::Radios::Astrodev *astrodev;
             !packet.data[0] ? astrodev = &shared.astrodev_rx : astrodev = &shared.astrodev_tx;
 

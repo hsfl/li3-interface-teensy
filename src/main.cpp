@@ -62,7 +62,7 @@ void setup()
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
     radio_initialization_thread_id = threads.addThread(initialize_radios, 0, 1000);
 
-    Serial.println("This version was flashed on: 11/29/23");
+    Serial.println("This version was flashed on: 12/03/23");
     // Serial.println("This version has is TX only, no telems, alive packets");
     // Serial.println("This version has is RX only, no telems");
     // Serial.println("This version has is RX only, w/ telems");

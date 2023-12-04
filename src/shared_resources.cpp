@@ -99,7 +99,8 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
     {
         // Don't try to get an ACK, since if the radio is receiving,
         // it can get too busy to respond
-        while ((iretn = astrodev.SetTCVConfig(false)) < 0)
+        // Unless you're the FM, since apparently it needs an ACK to work when the EM works beautifully without it
+        while ((iretn = astrodev.SetTCVConfig(true)) < 0)
         {
             Serial.println("Failed to settcvconfig astrodev");
             if (--retries < 0)
@@ -131,6 +132,18 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
         astrodev.tcv_configuration.tx_frequency != tx_freq ||
         astrodev.tcv_configuration.rx_frequency != rx_freq) {
             Serial.println("config mismatch detected!");
+            // Serial.print("interface_baud_rate: ");
+            // Serial.println(unsigned(astrodev.tcv_configuration.interface_baud_rate));
+            // Serial.print("power_amp_level: ");
+            // Serial.println(unsigned(astrodev.tcv_configuration.power_amp_level));
+            // Serial.print("rx_baud_rate: ");
+            // Serial.println(unsigned(astrodev.tcv_configuration.rx_baud_rate));
+            // Serial.print("tx_baud_rate: ");
+            // Serial.println(unsigned(astrodev.tcv_configuration.tx_baud_rate));
+            // Serial.print("ax25_preamble_length: ");
+            // Serial.println(unsigned(astrodev.tcv_configuration.ax25_preamble_length));
+            // Serial.print("ax25_postamble_length: ");
+            // Serial.println(unsigned(astrodev.tcv_configuration.ax25_postamble_length));
             threads.delay(5000);
             continue;
         }
