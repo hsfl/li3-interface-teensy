@@ -237,9 +237,10 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
 
             astrodev->tcv_configuration.power_amp_level = packet.data[4];
 
+            // Don't spend too much time here, because if this takes too long,
+            // then the reboot timeout will kick in,
+            // another FastSetPA will come in and it will endlessly repeat.
             int8_t retries = 2;
-
-            // Don't spend too much time here.
             while ((iretn = astrodev->SetPowerAmpFast(check_for_ack)) < 0 && --retries > 0)
             {
                 threads.delay(2000);
