@@ -225,10 +225,11 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
             Serial.print("Setting power level to: ");
             Serial.println(unsigned(packet.data[4]));
 
+            bool check_for_ack = true;
             if (packet.data[4] == astrodev->tcv_configuration.power_amp_level)
             {
                 Serial.println("Power level is already the requested value.");
-                return;
+                check_for_ack = false;
             }
 
             // Assuming here that only the tx radio will have its settings changed
@@ -236,18 +237,27 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
 
             astrodev->tcv_configuration.power_amp_level = packet.data[4];
 
-            int8_t retries = RADIO_INIT_CONNECT_ATTEMPTS;
+            int8_t retries = 2;
 
-            while ((iretn = astrodev->SetPowerAmpFast()) < 0 && --retries > 0)
+            // Don't spend too much time here.
+            while ((iretn = astrodev->SetPowerAmpFast(check_for_ack)) < 0 && --retries > 0)
             {
                 threads.delay(2000);
             }
-            if (iretn < 0 && retries < 0)
+            // if (iretn < 0 && retries < 0)
+            // {
+            //     // Reboot if encountering excessive difficulty
+            //     WRITE_RESTART(0x5FA0004);
+            // }
+            if (iretn >= 0)
             {
-                // Reboot if encountering excessive difficulty
-                WRITE_RESTART(0x5FA0004);
+                Serial.println("SetPowerAmpFast successful");
             }
-            Serial.println("SetPowerAmpFast successful");
+            else
+            {
+                // But FastSetPA has been fairly reliable. Just try setting it again manually if it didn't go through.
+                Serial.println("SetPowerAmpFast ACK not received");
+            }
         }
         break;
     case CMD_BURNWIRE:
