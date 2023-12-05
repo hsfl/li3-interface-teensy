@@ -145,7 +145,7 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                     Serial.println("Resetting");
                     astrodev->Reset();
                     Serial.println("Failed to settcvconfig astrodev");
-                    threads.delay(5000);
+                    threads.delay(3000);
                 }
                 if (iretn >= 0)
                 {
@@ -155,7 +155,7 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
                 while ((iretn = astrodev->GetTCVConfig()) < 0 && --retries > 0)
                 {
                     Serial.println("Failed to gettcvconfig astrodev");
-                    threads.delay(5000);
+                    threads.delay(3000);
                 }
                 Serial.print("Checking config settings... ");
                 if (astrodev->tcv_configuration.interface_baud_rate != new_tcv_config.interface_baud_rate

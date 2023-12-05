@@ -107,10 +107,10 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
             {
                 return iretn;
             }
-            threads.delay(5000);
+            threads.delay(3000);
         }
         Serial.println("SetTCVConfig completed");
-        threads.delay(1000);
+        threads.delay(100);
         while ((iretn = astrodev.GetTCVConfig()) < 0)
         {
             Serial.println("Failed to gettcvconfig astrodev");
@@ -118,7 +118,7 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
             {
                 return iretn;
             }
-            threads.delay(5000);
+            threads.delay(3000);
         }
         Serial.print("Checking config settings... ");
         if (astrodev.tcv_configuration.interface_baud_rate != 0 ||
@@ -144,7 +144,7 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
             // Serial.println(unsigned(astrodev.tcv_configuration.ax25_preamble_length));
             // Serial.print("ax25_postamble_length: ");
             // Serial.println(unsigned(astrodev.tcv_configuration.ax25_postamble_length));
-            threads.delay(5000);
+            threads.delay(3000);
             continue;
         }
         Serial.println("config check OK!");

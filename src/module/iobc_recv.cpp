@@ -6,6 +6,8 @@
 extern shared_resources shared;
 
 void send_tx_packet();
+int32_t pop_queue_nolock(Cosmos::Support::PacketComm &packet);
+void push_queue_nolock(const Cosmos::Support::PacketComm &packet);
 
 namespace
 {
@@ -14,23 +16,57 @@ namespace
     Cosmos::Support::PacketComm packet;
     // Throttle sends to keep temperature down
     elapsedMillis send_timer;
+    // If a SLIP end marker was missed and it keeps waiting, timeout
+    elapsedMillis slip_read_timeout;
+    // Time out after 1 second
+    const uint32_t SLIP_READ_TIMEOUT_MS = 1000;
+    // Max size of a UHF TX packet to read
+    const size_t MAX_PACKET_SIZE = 256;
+    // We know if we got a whole packet if the SLIP END marker was read, handle as successful read
+    bool got_slip_end = false;
+
+
+    // Queue up TX packets. Since it's only handled here, no need for mutexes
+    std::deque<Cosmos::Support::PacketComm> tx_queue;
 }
 
 // Listens for SLIP packets from the iobc and forwards them to the main queue to be handled
 void Cosmos::Module::Radio_interface::iobc_recv_loop()
 {
+    tx_queue.clear();
     Serial.println("iobc_recv_loop started");
+
+    uint16_t size = 0;
     
     while (true)
     {
         threads.delay(10);
 
-        uint16_t size = 0;
-        const size_t MAX_PACKET_SIZE = 256;
-        packet.wrapped.resize(MAX_PACKET_SIZE);
-        // Continuously read from serial buffer until a packet is received
-        while(!shared.SLIPIobcSerial.endofPacket() && size < MAX_PACKET_SIZE)
+        // Check tx queue and send out a packet if conditions are met
+        send_tx_packet();
+
+        if (!shared.SLIPIobcSerial.available())
         {
+            continue;
+        }
+
+        threads.delay(10);
+
+        // Reset SLIP read helper vars
+        size = 0;
+        packet.wrapped.resize(MAX_PACKET_SIZE, 0);
+        got_slip_end = false;
+        slip_read_timeout = 0;
+        // Receive tx packets or teensy/radio commands from iobc
+        // Continuously read from serial buffer until a packet is received
+        while(size < MAX_PACKET_SIZE)
+        {
+            // Keep reading until SLIP END marker is read
+            got_slip_end = shared.SLIPIobcSerial.endofPacket();
+            if (got_slip_end)
+            {
+                break;
+            }
             // If there are bytes in receive buffer to be read
             if (shared.SLIPIobcSerial.available())
             {
@@ -39,10 +75,23 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
                 // already decodes SLIP encoding
                 packet.wrapped[size] = shared.SLIPIobcSerial.read();
                 size++;
-            } else {
+            }
+            // Keep reading until timeout
+            else if (slip_read_timeout < SLIP_READ_TIMEOUT_MS)
+            {
                 threads.yield();
             }
+            // Timed out
+            else
+            {
+                break;
+            }
         }
+        if (!got_slip_end)
+        {
+            continue;
+        }
+
         packet.wrapped.resize(size);
         if (!packet.wrapped.size())
         {
@@ -55,8 +104,9 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         // Unwrap failure may indicate that this is an encrypted packet for the ground
         if (iretn < 0)
         {
-            Serial.println("Unwrap error, forwarding to ground.");
-            send_tx_packet();
+            Serial.println("IOBC RECV: Unwrap error."); // No encryption for downlink
+            // Serial.println("IOBC RECV: Unwrap error, forwarding to ground.");
+            // push_queue_nolock(packet);
             continue;
         }
 
@@ -64,20 +114,20 @@ void Cosmos::Module::Radio_interface::iobc_recv_loop()
         switch(packet.header.nodedest)
         {
         case GROUND_NODE_ID:
-            Serial.println("To ground");
-            send_tx_packet();
+            Serial.println("IOBC RECV: To ground");
+            push_queue_nolock(packet);
             break;
         // An IOBC destination packet will come from the iobc
         // only in the event that it's meant as an internal command
         case IOBC_NODE_ID:
             // Tag this packet to be handled internally
             packet.header.nodedest = LI3TEENSY_ID;
-            Serial.print("To me, Packet header type:");
+            Serial.print("IOBC RECV: To me, Packet header type:");
             Serial.println((uint16_t)packet.header.type);
             shared.push_queue(shared.main_queue, shared.main_lock, packet);
             break;
         default:
-            Serial.println("Packet destination not handled");
+            Serial.println("IOBC RECV: Packet destination not handled");
             // exit(-1);
             break;
         }
@@ -109,7 +159,6 @@ void send_tx_packet()
 {
     if (!shared.get_tx_radio_initialized_state())
     {
-        Serial.println("TX not initialized, discarding TX packet...");
         return;
     }
     // Since RX starts hearing TX packets at higher power amp levels,
@@ -117,31 +166,47 @@ void send_tx_packet()
     // requires some quietness.
     if (!shared.get_rx_radio_initialized_state())
     {
-        Serial.println("RX not initialized, discarding TX packet...");
         return;
     }
     // Throttle to minimize heat
     if (send_timer < TX_THROTTLE_MS)
     {
-        // The point of this is to not get bogged down in TX packets
-        // if there might be other non-TX packets waiting.
-        // Also, for HyTI, UHF down is only for LEOPS telems, so
-        // better to discard older telems in favor of newer ones.
-        if (DISCARD_THROTTLED_PACKETS)
-        {
-            Serial.println("DISCARD_THROTTLED_PACKETS true, discarding TX packet.");
-            return;
-        }
-        threads.delay(TX_THROTTLE_MS - send_timer);
+        return;
+    }
+    if (pop_queue_nolock(packet) < 0)
+    {
+        return;
     }
     iretn = Cosmos::Module::Radio_interface::send_packet(packet);
     if (iretn < 0)
     {
-        Serial.print("Error sending to ground: ");
+        Serial.print("IOBC RECV: Error sending to ground: ");
         Serial.println(iretn);
     }
     else
     {
         send_timer = 0;
     }
+}
+
+
+int32_t pop_queue_nolock(Cosmos::Support::PacketComm &packet)
+{
+  if (!tx_queue.size())
+  {
+      return -1;
+  }
+  packet = tx_queue.front();
+  tx_queue.pop_front();
+  return tx_queue.size();
+}
+
+// Push a packet onto a queue
+void push_queue_nolock(const Cosmos::Support::PacketComm &packet)
+{
+  if (tx_queue.size() > MAX_QUEUE_SIZE)
+  {
+      tx_queue.pop_front();
+  }
+  tx_queue.push_back(packet);
 }

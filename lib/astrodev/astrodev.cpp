@@ -56,7 +56,7 @@ namespace Cosmos {
                     }
                     else
                     {
-                        threads.delay(5000);
+                        threads.delay(3000);
                     }
                 }
                 Serial.println("Radio ping test successful");

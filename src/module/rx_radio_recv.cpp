@@ -82,9 +82,7 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
         return;
     case Astrodev::Command::NOOP:
     case Astrodev::Command::GETTCVCONFIG:
-    case Astrodev::Command::SETTCVCONFIG:
     case Astrodev::Command::TELEMETRY:
-    case Astrodev::Command::FASTSETPA:
         // Setup PacketComm packet stuff
         packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
         packet.header.nodeorig = IOBC_NODE_ID;
@@ -100,6 +98,10 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
         packet.data[3] = msg.header.sizelo;
         memcpy(packet.data.data()+4, &msg.payload[0], msg.header.sizelo);
         break;
+        // Don't bother wasting time sending these back
+    case Astrodev::Command::SETTCVCONFIG:
+    case Astrodev::Command::FASTSETPA:
+        return;
     case Astrodev::Command::RECEIVE:
         // Packets from the ground will be in PacketComm protocol
         // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc

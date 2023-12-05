@@ -16,8 +16,8 @@ namespace
 
     elapsedMillis tx_telem_timer;
 
-    // If it has been more than 5 minutes since last radio response 
-    const unsigned long unconnected_timeout = 5*60 * 1000;
+    // If it has been more than 2 minutes since last radio response 
+    const unsigned long unconnected_timeout = 2*60 * 1000;
 }
 
 void Cosmos::Module::Radio_interface::tx_recv_loop()
@@ -32,7 +32,7 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
         // Have lock here to not interfere when reseting TCV config via command
         Threads::Scope lock(shared.tx_lock);
 
-        if (tx_telem_timer > 60000)
+        if (tx_telem_timer > 45*1000)
         {
             // Check connection
             shared.astrodev_tx.Ping(false);
@@ -82,10 +82,8 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
             case (Astrodev::Command)0:
                 continue;
             case Astrodev::Command::NOOP:
-            case Astrodev::Command::GETTCVCONFIG:
-            case Astrodev::Command::SETTCVCONFIG:
             case Astrodev::Command::TELEMETRY:
-            case Astrodev::Command::FASTSETPA:
+            case Astrodev::Command::GETTCVCONFIG:
                 // Setup PacketComm packet stuff
                 packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
                 packet.header.nodeorig = IOBC_NODE_ID;
@@ -97,6 +95,9 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
                 packet.data[3] = incoming_message.header.sizelo;
                 memcpy(packet.data.data()+4, &incoming_message.payload[0], incoming_message.header.sizelo);
                 break;
+            // Don't bother wasting time sending these back
+            case Astrodev::Command::SETTCVCONFIG:
+            case Astrodev::Command::FASTSETPA:
             case Astrodev::Command::TRANSMIT:
                 // Transmit ACK
                 continue;
