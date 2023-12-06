@@ -6,7 +6,7 @@ extern shared_resources shared;
 // Args:
 // Byte 0 = Unit (doesn't matter)
 // Byte 1 = doesn't matter
-// Byte 2 = 255
+// Byte 2 = CMD_REBOOT (255)
 // Byte 3 = Number of response bytes (0)
 void Reboot()
 {
@@ -18,7 +18,7 @@ void Reboot()
 // Args:
 // Byte 0 = Unit (doesn't matter)
 // Byte 1 = doesn't matter
-// Byte 2 = 254
+// Byte 2 = CMD_BURNWIRE (254)
 // Byte 3 = Number of response bytes (0)
 // Byte 4 = Attempt ID
 // Byte 5 = HIGH (1) or LOW (0)
