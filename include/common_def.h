@@ -13,7 +13,7 @@
 #define TX_PACKET_SIZE 250
 
 // Throttle TX packets to keep temperature low
-#define TX_THROTTLE_MS 5000
+#define TX_THROTTLE_MS 2000
 
 #define RX_STACK_SIZE 9000
 #define TX_STACK_SIZE 6000
