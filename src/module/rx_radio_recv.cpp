@@ -13,7 +13,8 @@ namespace
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
     elapsedMillis last_connected;
-    elapsedMillis rx_telem_timer = 999999; // ping immediately
+    // Ping occasionally to see if RX radio is alive
+    elapsedMillis rx_ping_timer = 999999; // ping immediately
 
     // AX25 header left-shifts the destination callsign by 1,
     // precalculate for faster checks later to
@@ -23,6 +24,8 @@ namespace
 
     // If it has been more than 2 minutes since last radio response 
     const unsigned long unconnected_timeout = 2 * 60 * 1000;
+    // Every 45 seconds try checking if RX radio is still alive, and no receive packets have come in
+    const unsigned long ping_time = 45000;
 }
 
 void Cosmos::Module::Radio_interface::rx_recv_loop()
@@ -48,14 +51,15 @@ void Cosmos::Module::Radio_interface::rx_recv_loop()
             Radio_interface::handle_rx_recv(incoming_message);
         }
 
-        // Grab Telemetry every 60 seconds, and check if we are still connected
-        if (rx_telem_timer > 60000)
+        // Grab Telemetry every 45 seconds, and check if we are still connected.
+        // If receive packets are coming in, then no need to ping.
+        if (rx_ping_timer > ping_time)
         {
             // Check connection
             shared.astrodev_rx.Ping(false);
             // shared.astrodev_rx.GetTCVConfig(false);
             // shared.astrodev_rx.GetTelemetry(false);
-            rx_telem_timer = 0;
+            rx_ping_timer = 0;
             // Attempt receive of any of the above packets
             continue;
         }
@@ -105,6 +109,9 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     case Astrodev::Command::RECEIVE:
         // Packets from the ground will be in PacketComm protocol
         // TODO: get rid of redundant unwrap/wrap that will probably be happening at sending this back to iobc
+
+        // Receive packet is sufficient evidence of alive-ness
+        rx_ping_timer = 0;
 
         // If the source of the packet is from the TX radio, that's no good, discard.
         if (strncmp((char*)&msg.payload[7], DEST_CALLSIGN_SHIFTED, 6) == 0)
