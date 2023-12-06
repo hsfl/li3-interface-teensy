@@ -82,8 +82,8 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
     astrodev.tcv_configuration.power_amp_level = 100;
     astrodev.tcv_configuration.rx_baud_rate = 1;
     astrodev.tcv_configuration.tx_baud_rate = 1;
-    astrodev.tcv_configuration.ax25_preamble_length = 20;
-    astrodev.tcv_configuration.ax25_postamble_length = 20;
+    astrodev.tcv_configuration.ax25_preamble_length = 10;
+    astrodev.tcv_configuration.ax25_postamble_length = 10;
     astrodev.tcv_configuration.rx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
     astrodev.tcv_configuration.tx_modulation = Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK;
     astrodev.tcv_configuration.tx_frequency = tx_freq;
@@ -125,8 +125,8 @@ int32_t shared_resources::connect_radio(Cosmos::Devices::Radios::Astrodev &astro
         astrodev.tcv_configuration.power_amp_level != 100 ||
         astrodev.tcv_configuration.rx_baud_rate != 1 ||
         astrodev.tcv_configuration.tx_baud_rate != 1 ||
-        astrodev.tcv_configuration.ax25_preamble_length != 20||
-        astrodev.tcv_configuration.ax25_postamble_length != 20 ||
+        astrodev.tcv_configuration.ax25_preamble_length != 10||
+        astrodev.tcv_configuration.ax25_postamble_length != 10 ||
         astrodev.tcv_configuration.rx_modulation != Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
         astrodev.tcv_configuration.tx_modulation != Cosmos::Devices::Radios::Astrodev::Modulation::ASTRODEV_MODULATION_GFSK ||
         astrodev.tcv_configuration.tx_frequency != tx_freq ||
