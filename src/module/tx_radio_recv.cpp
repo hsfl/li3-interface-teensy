@@ -14,10 +14,12 @@ namespace
     Astrodev::frame incoming_message;
     elapsedMillis last_connected;
 
-    elapsedMillis tx_telem_timer = 999999; // Ping immediately
+    elapsedMillis tx_ping_timer = 999999; // Ping immediately
 
     // If it has been more than 2 minutes since last radio response 
     const unsigned long unconnected_timeout = 2*60 * 1000;
+    // Every 45 seconds try checking if TX radio is still alive, and no receive packets have come in
+    const unsigned long ping_time = 45*1000;
 }
 
 void Cosmos::Module::Radio_interface::tx_recv_loop()
@@ -32,13 +34,14 @@ void Cosmos::Module::Radio_interface::tx_recv_loop()
         // Have lock here to not interfere when reseting TCV config via command
         Threads::Scope lock(shared.tx_lock);
 
-        if (tx_telem_timer > 45*1000)
+        if (tx_ping_timer > ping_time)
         {
             // Check connection
+            Serial.println("TX PING");
             shared.astrodev_tx.Ping(false);
             // shared.astrodev_tx.GetTCVConfig(false);
             // shared.astrodev_tx.GetTelemetry(false);
-            tx_telem_timer = 0;
+            tx_ping_timer = 0;
             // Attempt receive of any of the above packets
         }
 

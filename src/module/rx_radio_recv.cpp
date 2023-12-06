@@ -87,6 +87,8 @@ void Cosmos::Module::Radio_interface::handle_rx_recv(const Astrodev::frame& msg)
     case Astrodev::Command::NOOP:
     case Astrodev::Command::GETTCVCONFIG:
     case Astrodev::Command::TELEMETRY:
+        // These are getting sent to iobc, so no need to manually ping
+        rx_ping_timer = 0;
         // Setup PacketComm packet stuff
         packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
         packet.header.nodeorig = IOBC_NODE_ID;

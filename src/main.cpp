@@ -217,7 +217,7 @@ void initialize_radios()
         {
             if (shared.init_tx_radio(&Serial2, ASTRODEV_BAUD) >= 0)
             {
-                threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
+                // threads.addThread(Cosmos::Module::Radio_interface::tx_recv_loop, 0, RX_STACK_SIZE);
                 // Tell iobc that TX has completed initialization.
                 // If iobc determines that transmission is safe,
                 // it will call SetFastPA to set TX radio to operational power amp levels.
