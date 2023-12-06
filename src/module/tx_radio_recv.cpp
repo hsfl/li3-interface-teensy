@@ -14,7 +14,7 @@ namespace
     Astrodev::frame incoming_message;
     elapsedMillis last_connected;
 
-    elapsedMillis tx_telem_timer;
+    elapsedMillis tx_telem_timer = 999999; // Ping immediately
 
     // If it has been more than 2 minutes since last radio response 
     const unsigned long unconnected_timeout = 2*60 * 1000;

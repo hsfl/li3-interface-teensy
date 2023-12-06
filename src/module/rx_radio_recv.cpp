@@ -13,7 +13,7 @@ namespace
     Cosmos::Support::PacketComm packet;
     Astrodev::frame incoming_message;
     elapsedMillis last_connected;
-    elapsedMillis rx_telem_timer;
+    elapsedMillis rx_telem_timer = 999999; // ping immediately
 
     // AX25 header left-shifts the destination callsign by 1,
     // precalculate for faster checks later to
@@ -21,8 +21,8 @@ namespace
     // which unfortunately happens at higher power amp levels.
     char DEST_CALLSIGN_SHIFTED[6];
 
-    // If it has been more than 5 minutes since last radio response 
-    const unsigned long unconnected_timeout = 5*60 * 1000;
+    // If it has been more than 2 minutes since last radio response 
+    const unsigned long unconnected_timeout = 2 * 60 * 1000;
 }
 
 void Cosmos::Module::Radio_interface::rx_recv_loop()

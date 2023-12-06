@@ -225,11 +225,9 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
             Serial.print("Setting power level to: ");
             Serial.println(unsigned(packet.data[4]));
 
-            bool check_for_ack = true;
             if (packet.data[4] == astrodev->tcv_configuration.power_amp_level)
             {
                 Serial.println("Power level is already the requested value.");
-                check_for_ack = false;
             }
 
             // Assuming here that only the tx radio will have its settings changed
@@ -240,8 +238,9 @@ void Lithium3::RadioCommand(Cosmos::Support::PacketComm &packet)
             // Don't spend too much time here, because if this takes too long,
             // then the reboot timeout will kick in,
             // another FastSetPA will come in and it will endlessly repeat.
-            int8_t retries = 2;
-            while ((iretn = astrodev->SetPowerAmpFast(check_for_ack)) < 0 && --retries > 0)
+            // Doesn't seem to work on FM in any reasonable amount of time.
+            int8_t retries = 3;
+            while ((iretn = astrodev->SetPowerAmpFast(false)) < 0 && --retries > 0)
             {
                 threads.delay(2000);
             }
