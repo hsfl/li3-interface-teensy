@@ -58,9 +58,9 @@ void SetBurnwire(const Cosmos::Support::PacketComm &packet)
         Serial.print(" milliseconds.");
     }
     Serial.println();
-    Serial.println("BURNWIRE CODE IS CURRENTLY COMMENTED OUT!"); // Remember to comment back in main.cpp too!
-    // pinMode(12, OUTPUT);
-    // digitalWrite(12, shared.burnwire_state);
+    Serial.println("BURNWIRE CODE IS FUNCTIONAL!"); // Remember to comment back in main.cpp too!
+    pinMode(12, OUTPUT);
+    digitalWrite(12, shared.burnwire_state);
 
     // Reset timer to keep burnwire set HIGH
     shared.burnwire_timer = 0;

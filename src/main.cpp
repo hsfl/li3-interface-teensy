@@ -60,13 +60,8 @@ void setup()
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
     radio_initialization_thread_id = threads.addThread(initialize_radios, 0, 1000);
 
-    Serial.println("This version was created on: 12/07/23");
-    // Serial.println("This version has is TX only, no telems, alive packets");
-    // Serial.println("This version has is RX only, no telems");
-    // Serial.println("This version has is RX only, w/ telems");
-    Serial.println("This version has RX and TX");
-    Serial.println("This version has burnwire code commented out!");
-    // Serial.println("This version has BURNWIRE COMMANDING ENABLED!");
+    Serial.println("This is the release version created on: 12/07/23");
+    Serial.println("This version has BURNWIRE COMMANDING ENABLED!");
     Serial.println("Setup complete");
 
     // Tell iobc that Teensy has completed initialization.
@@ -312,9 +307,9 @@ void control_burnwire()
         shared.burnwire_state = LOW;
         Serial.print("Setting burn wire ");
         Serial.println("LOW");
-        Serial.println("BURNWIRE CODE IS CURRENTLY COMMENTED OUT!"); // Remember to comment back in RadioCommands.cpp too!
-        // pinMode(12, OUTPUT);
-        // digitalWrite(12, LOW);
+        Serial.println("BURNWIRE CODE IS FUNCTIONAL!"); // Remember to comment back in RadioCommands.cpp too!
+        pinMode(12, OUTPUT);
+        digitalWrite(12, LOW);
 
         // Send burn ACK back to iobc
         // Byte 0 = Unit (doesn't matter)
