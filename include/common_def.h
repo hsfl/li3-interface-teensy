@@ -43,6 +43,7 @@
 
 // Special internal command ids
 #define CMD_HEADER_SIZE 4
+#define TEENSY_INIT_ACK 250
 #define TX_INIT_ACK 251
 #define BURN_ACK 252
 #define TLM_TSENS 253

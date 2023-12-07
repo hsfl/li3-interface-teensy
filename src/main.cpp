@@ -23,8 +23,6 @@ void get_temp_sensor_measurements();
 void control_burnwire();
 void send_tx_init_ack();
 
-PacketComm alive_packet;
-
 elapsedMillis temp_timer;
 
 //! Global shared resources defined here
@@ -62,7 +60,7 @@ void setup()
     threads.addThread(Cosmos::Module::Radio_interface::iobc_recv_loop, 0, RX_STACK_SIZE);
     radio_initialization_thread_id = threads.addThread(initialize_radios, 0, 1000);
 
-    Serial.println("This version was flashed on: 12/03/23");
+    Serial.println("This version was created on: 12/07/23");
     // Serial.println("This version has is TX only, no telems, alive packets");
     // Serial.println("This version has is RX only, no telems");
     // Serial.println("This version has is RX only, w/ telems");
@@ -71,19 +69,21 @@ void setup()
     // Serial.println("This version has BURNWIRE COMMANDING ENABLED!");
     Serial.println("Setup complete");
 
-    // alive_packet.header.type = Cosmos::Support::PacketComm::TypeId::CommandRadioAstrodevCommunicate;
-    // alive_packet.header.nodeorig = IOBC_NODE_ID;
-    // alive_packet.header.nodedest = IOBC_NODE_ID;
-    // alive_packet.data.resize(4);
+    // Tell iobc that Teensy has completed initialization.
+    // Not good if the teensy rebooted during a burnwire test
     // Byte 0 = Unit (0)
-    // Byte 1 = CMD in or out
-    // Byte 2 = Astrodev cmd id
-    // Byte 3 = Number of response bytes
-    // alive_packet.data[0] = LI3RX;
-    // alive_packet.data[1] = 0x20;
-    // alive_packet.data[2] = 1; // NOOP
-    // alive_packet.data[3] = 0;
-    // alive_packet.Wrap();
+    // Byte 1 = doesn't matter
+    // Byte 2 = TEENSY_INIT_ACK (250)
+    // Byte 3 = Number of response bytes (0)
+    packet.header.type = PacketComm::TypeId::CommandRadioAstrodevCommunicate;
+    packet.header.nodeorig = IOBC_NODE_ID;
+    packet.header.nodedest = IOBC_NODE_ID;
+    packet.data.resize(CMD_HEADER_SIZE);
+    packet.data[0] = 0;
+    packet.data[1] = 0;
+    packet.data[2] = TEENSY_INIT_ACK;
+    packet.data[3] = 0;
+    shared.send_packet_to_iobc(packet);
 }
 
 //! Main loop
@@ -306,6 +306,7 @@ void control_burnwire()
 {
     // Set burnwire pin to LOW after time exceeds on time
     // If burnwire_on_time is 0, then the burnwire is kept HIGH until manually commanded to turn LOW
+    threads.yield();
     if (shared.burnwire_state == HIGH && shared.burnwire_on_time && shared.burnwire_timer > shared.burnwire_on_time)
     {
         shared.burnwire_state = LOW;
