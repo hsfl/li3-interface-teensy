@@ -29,3 +29,10 @@ packets-> main_queue
 
 main thread:
 for packet in main_queue: process packet
+
+
+------
+
+See the build.log file for the output of a successful build, which will have the versions
+of the various frameworks and packages that were used. Refer to it if necessary if builds
+do not work in the future.

@@ -1,0 +1,260 @@
+ *  Executing task: platformio run --environment teensy40 
+
+Processing teensy40 (board: teensy40; platform: teensy@4.17.0; framework: arduino)
+---------------------------------------------------------------------------------------------------------------------------------------
+Verbose mode can be enabled via `-v, --verbose` option
+CONFIGURATION: https://docs.platformio.org/page/boards/teensy/teensy40.html
+PLATFORM: Teensy (4.17.0) > Teensy 4.0
+HARDWARE: IMXRT1062 600MHz, 512KB RAM, 1.94MB Flash
+DEBUG: Current (jlink) External (jlink)
+PACKAGES: 
+ - framework-arduinoteensy @ 1.157.220801 (1.57) 
+ - tool-teensy @ 1.157.0 (1.57) 
+ - toolchain-gccarmnoneeabi @ 1.50401.190816 (5.4.1)
+LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
+LDF Modes: Finder ~ chain+, Compatibility ~ soft
+Found 94 compatible libraries
+Scanning dependencies...
+Dependency Graph
+|-- TeensyThreads @ 1.0.2
+|-- OSC
+|-- astrodev
+|-- micro-cosmos
+Building in release mode
+Compiling .pio/build/teensy40/src/helpers/RadioCommands.cpp.o
+Compiling .pio/build/teensy40/src/helpers/TestBlink.cpp.o
+Compiling .pio/build/teensy40/src/main.cpp.o
+Compiling .pio/build/teensy40/src/module/iobc_recv.cpp.o
+Compiling .pio/build/teensy40/src/module/radio_send.cpp.o
+Compiling .pio/build/teensy40/src/module/rx_radio_recv.cpp.o
+Compiling .pio/build/teensy40/src/module/tx_radio_recv.cpp.o
+Compiling .pio/build/teensy40/src/shared_resources.cpp.o
+Compiling .pio/build/teensy40/lib9c8/TeensyThreads/TeensyThreads-asm.S.o
+Compiling .pio/build/teensy40/lib9c8/TeensyThreads/TeensyThreads.cpp.o
+Compiling .pio/build/teensy40/libdf7/OSC/OSCBundle.cpp.o
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from include/helpers/RadioCommands.h:4,
+Compiling .pio/build/teensy40/libdf7/OSC/OSCData.cpp.o
+                 from src/helpers/RadioCommands.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+Compiling .pio/build/teensy40/libdf7/OSC/OSCMatch.c.o
+Compiling .pio/build/teensy40/libdf7/OSC/OSCMessage.cpp.o
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from src/main.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from include/module/radio_send.h:4,
+                 from src/module/radio_send.cpp:2:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from include/module/iobc_recv.h:4,
+                 from src/module/iobc_recv.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from include/module/radio_recv.h:4,
+                 from src/module/rx_radio_recv.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from include/module/radio_recv.h:4,
+                 from src/module/tx_radio_recv.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from include/shared_resources.h:11,
+                 from src/shared_resources.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+Compiling .pio/build/teensy40/libdf7/OSC/OSCTiming.cpp.o
+Compiling .pio/build/teensy40/libdf7/OSC/SLIPEncodedSerial.cpp.o
+Compiling .pio/build/teensy40/libdf7/OSC/SLIPEncodedUSBSerial.cpp.o
+Compiling .pio/build/teensy40/libb51/micro-cosmos/math/bytelib.cpp.o
+/home/ginosc/.platformio/packages/framework-arduinoteensy/libraries/TeensyThreads/TeensyThreads.cpp:371:13: warning: 'void context_pit_empty()' defined but not used [-Wunused-function]
+ static void context_pit_empty() {}
+             ^
+Archiving .pio/build/teensy40/lib9c8/libTeensyThreads.a
+Indexing .pio/build/teensy40/lib9c8/libTeensyThreads.a
+Compiling .pio/build/teensy40/libb51/micro-cosmos/math/crclib.cpp.o
+Compiling .pio/build/teensy40/libb51/micro-cosmos/support/ax25class.cpp.o
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/bytelib.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+Compiling .pio/build/teensy40/libb51/micro-cosmos/support/packetcomm.cpp.o
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/support/ax25class.h:35,
+                 from lib/micro-cosmos/support/ax25class.cpp:31:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/math/crclib.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+Archiving .pio/build/teensy40/libdf7/libOSC.a
+Indexing .pio/build/teensy40/libdf7/libOSC.a
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/micro-cosmos/support/packetcomm.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+Compiling .pio/build/teensy40/libb51/micro-cosmos/support/sliplib.cpp.o
+Compiling .pio/build/teensy40/lib91e/astrodev/astrodev.cpp.o
+In file included from lib/micro-cosmos/math/bytelib.h:34:0,
+                 from lib/micro-cosmos/math/crclib.h:14,
+                 from lib/micro-cosmos/support/packetcomm.h:5,
+                 from lib/astrodev/astrodev.h:5,
+                 from lib/astrodev/astrodev.cpp:1:
+lib/micro-cosmos/math/constants.h:40:1: warning: floating constant truncated to zero [-Woverflow]
+ const double D_SMALL=static_cast <double>(1e-76);
+ ^
+Compiling .pio/build/teensy40/FrameworkArduino/AudioStream.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/CrashReport.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/DMAChannel.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/EventResponder.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial1.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial2.cpp.o
+lib/micro-cosmos/support/packetcomm.cpp: In member function 'int32_t Cosmos::Support::PacketComm::Unwrap(bool, bool)':
+lib/micro-cosmos/support/packetcomm.cpp:51:34: warning: switch condition has type bool [-Wswitch-bool]
+             switch(minimal_header)
+                                  ^
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial3.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial4.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial5.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial6.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial7.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/HardwareSerial8.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/IPAddress.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/IntervalTimer.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/Stream.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/Time.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/Print.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/Tone.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/WMath.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/WString.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/analog.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/bootdata.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/clockspeed.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/debugprintf.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/delay.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/digital.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/eeprom.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/extmem.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/fuse.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/interrupt.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/keylayouts.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/memcpy-armv7m.S.o
+Compiling .pio/build/teensy40/FrameworkArduino/main.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/memset.S.o
+Compiling .pio/build/teensy40/FrameworkArduino/new.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/nonstd.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/pwm.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/rtc.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent1.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent2.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent3.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent4.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent5.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent7.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent6.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEvent8.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEventUSB1.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/serialEventUSB2.cpp.o
+Archiving .pio/build/teensy40/lib91e/libastrodev.a
+Compiling .pio/build/teensy40/FrameworkArduino/sm_alloc_valid.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_calloc.c.o
+Indexing .pio/build/teensy40/lib91e/libastrodev.a
+Compiling .pio/build/teensy40/FrameworkArduino/sm_free.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_hash.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_malloc.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_malloc_stats.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_pool.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_realloc.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_realloc_i.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_realloc_move.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_szalloc.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_util.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/sm_zalloc.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/startup.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/tempmon.c.o
+Archiving .pio/build/teensy40/libb51/libmicro-cosmos.a
+Indexing .pio/build/teensy40/libb51/libmicro-cosmos.a
+Compiling .pio/build/teensy40/FrameworkArduino/usb.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_audio.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_desc.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_flightsim.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_inst.cpp.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_joystick.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_keyboard.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_midi.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_mouse.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_mtp.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_rawhid.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_seremu.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_serial.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_serial2.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_serial3.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/usb_touch.c.o
+Compiling .pio/build/teensy40/FrameworkArduino/yield.cpp.o
+Archiving .pio/build/teensy40/libFrameworkArduino.a
+Indexing .pio/build/teensy40/libFrameworkArduino.a
+Linking .pio/build/teensy40/firmware.elf
+Checking size .pio/build/teensy40/firmware.elf
+Building .pio/build/teensy40/firmware.hex
+Calculating size .pio/build/teensy40/firmware.elf
+teensy_size: Memory Usage on Teensy 4.0:
+teensy_size:   FLASH: code:299708, data:32668, headers:8672   free for files:1690568
+teensy_size:    RAM1: variables:45472, code:297928, padding:29752   free for local variables:151136
+teensy_size:    RAM2: variables:12384  free for malloc/new:511904
+===================================================== [SUCCESS] Took 4.49 seconds =====================================================
+
+Environment    Status    Duration
+-------------  --------  ------------
+teensy40       SUCCESS   00:00:04.494
+===================================================== 1 succeeded in 00:00:04.494 =====================================================
+ *  Terminal will be reused by tasks, press any key to close it.
